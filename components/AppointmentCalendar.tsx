@@ -51,9 +51,10 @@ export default function AppointmentCalendar() {
     }
   }
 
-  const handleSelectEvent = (event: CalendarEvent) => {
-    // Handle appointment click - could open modal or navigate to detail view
-    console.log('Selected appointment:', event.resource)
+  const handleSelectEvent = (event: Event) => {
+    // Type assertion since we know our events are CalendarEvent
+    const calendarEvent = event as CalendarEvent
+    console.log('Selected appointment:', calendarEvent.resource)
   }
 
   const handleSelectSlot = (slotInfo: SlotInfo) => {
@@ -86,12 +87,16 @@ export default function AppointmentCalendar() {
           defaultView="week"
           step={30}
           showMultiDayTimes
-          eventPropGetter={(event: CalendarEvent) => ({
-            style: {
-              backgroundColor: '#2563eb',
-              borderColor: '#1d4ed8',
-            },
-          })}
+          eventPropGetter={(event: Event) => {
+            // Type assertion since we know our events are CalendarEvent
+            const calendarEvent = event as CalendarEvent
+            return {
+              style: {
+                backgroundColor: '#2563eb',
+                borderColor: '#1d4ed8',
+              },
+            }
+          }}
         />
       </div>
     </div>

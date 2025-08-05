@@ -262,9 +262,10 @@ async function main() {
     
     const customer = customerList[Math.floor(Math.random() * customerList.length)]
     const service = serviceList[Math.floor(Math.random() * serviceList.length)]
-    const employee = [admin, manager, staff][Math.floor(Math.random() * 3)]
+    const employees = [admin, manager, staff]
+    const employee = employees[Math.floor(Math.random() * employees.length)]
     
-    if (service && customer) {
+    if (service && customer && employee) {
       const endTime = new Date(appointmentDate)
       endTime.setMinutes(appointmentDate.getMinutes() + service.duration)
 
