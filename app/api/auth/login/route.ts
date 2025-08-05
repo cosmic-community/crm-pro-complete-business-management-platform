@@ -1,44 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { hashPassword, comparePassword, generateToken, setAuthCookie } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { comparePassword, generateToken, setAuthCookie } from '@/lib/auth'
-import { loginSchema, validateInput } from '@/lib/validations'
+import { loginSchema } from '@/lib/validations'
 
-// Helper function to extract IP address
-function getClientIP(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for')
-  const realIP = request.headers.get('x-real-ip')
-  
-  if (forwarded) {
-    return forwarded.split(',')[0]?.trim() || 'unknown'
-  }
-  
-  if (realIP) {
-    return realIP
-  }
-  
-  return 'unknown'
-}
+// Force this route to use Node.js runtime instead of Edge Runtime
+export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    const validation = validateInput(loginSchema, body)
+    const validation = loginSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validation.errors },
+        { error: 'Invalid input', details: validation.error.flatten() },
         { status: 400 }
       )
     }
 
-    const { email, password } = validation.data!
+    const { email, password } = validation.data
 
     // Find user by email
     const user = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+      where: { email }
     })
 
-    if (!user || !user.isActive) {
+    if (!user) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
@@ -46,8 +33,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify password
-    const isPasswordValid = await comparePassword(password, user.password)
-    if (!isPasswordValid) {
+    const isValidPassword = await comparePassword(password, user.password)
+    if (!isValidPassword) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
@@ -58,36 +45,24 @@ export async function POST(request: NextRequest) {
     const token = generateToken({
       userId: user.id,
       email: user.email,
-      role: user.role,
+      role: user.role
     })
 
-    // Create audit log
-    await prisma.auditLog.create({
-      data: {
-        action: 'LOGIN',
-        resource: 'user',
-        resourceId: user.id,
-        userId: user.id,
-        ipAddress: getClientIP(request),
-        userAgent: request.headers.get('user-agent'),
-      },
-    })
-
-    // Set cookie and return success
+    // Create response with user data
     const response = NextResponse.json({
-      message: 'Login successful',
-      data: {
+      user: {
         id: user.id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role,
-      },
+        role: user.role
+      }
     })
 
+    // Set HTTP-only cookie
     response.headers.set('Set-Cookie', setAuthCookie(token))
-    return response
 
+    return response
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json(

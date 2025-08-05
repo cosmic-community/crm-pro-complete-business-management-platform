@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['bcryptjs', 'jsonwebtoken'],
-  },
+  // Updated for Next.js 15 - moved from experimental.serverComponentsExternalPackages
+  serverExternalPackages: ['bcryptjs', 'jsonwebtoken'],
   images: {
     domains: ['images.unsplash.com', 'cdn.cosmicjs.com'],
   },

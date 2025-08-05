@@ -1,47 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { hashPassword, generateToken, setAuthCookie } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { hashPassword } from '@/lib/auth'
-import { registerSchema, validateInput } from '@/lib/validations'
-import { sendEmail, emailTemplates } from '@/lib/email'
+import { registerSchema } from '@/lib/validations'
 
-// Helper function to extract IP address
-function getClientIP(request: NextRequest): string {
-  const forwarded = request.headers.get('x-forwarded-for')
-  const realIP = request.headers.get('x-real-ip')
-  
-  if (forwarded) {
-    return forwarded.split(',')[0]?.trim() || 'unknown'
-  }
-  
-  if (realIP) {
-    return realIP
-  }
-  
-  return 'unknown'
-}
+// Force this route to use Node.js runtime instead of Edge Runtime
+export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     
-    const validation = validateInput(registerSchema, body)
+    const validation = registerSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
-        { error: 'Invalid input', details: validation.errors },
+        { error: 'Invalid input', details: validation.error.flatten() },
         { status: 400 }
       )
     }
 
-    const { firstName, lastName, email, password, role = 'STAFF' } = validation.data!
+    const { email, password, firstName, lastName } = validation.data
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email: email.toLowerCase() },
+      where: { email }
     })
 
     if (existingUser) {
       return NextResponse.json(
-        { error: 'User already exists with this email' },
+        { error: 'User already exists' },
         { status: 409 }
       )
     }
@@ -52,45 +38,36 @@ export async function POST(request: NextRequest) {
     // Create user
     const user = await prisma.user.create({
       data: {
+        email,
+        password: hashedPassword,
         firstName,
         lastName,
-        email: email.toLowerCase(),
-        password: hashedPassword,
-        role,
-      },
+        role: 'USER'
+      }
     })
 
-    // Send welcome email
-    const welcomeEmail = emailTemplates.welcome(firstName)
-    await sendEmail({
-      to: user.email,
-      ...welcomeEmail,
+    // Generate JWT token
+    const token = generateToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role
     })
 
-    // Create audit log
-    await prisma.auditLog.create({
-      data: {
-        action: 'CREATE',
-        resource: 'user',
-        resourceId: user.id,
-        userId: user.id,
-        details: { role: user.role },
-        ipAddress: getClientIP(request),
-        userAgent: request.headers.get('user-agent'),
-      },
-    })
-
-    return NextResponse.json({
-      message: 'Registration successful',
-      data: {
+    // Create response with user data
+    const response = NextResponse.json({
+      user: {
         id: user.id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role,
-      },
+        role: user.role
+      }
     })
 
+    // Set HTTP-only cookie
+    response.headers.set('Set-Cookie', setAuthCookie(token))
+
+    return response
   } catch (error) {
     console.error('Registration error:', error)
     return NextResponse.json(

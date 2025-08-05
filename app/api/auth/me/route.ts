@@ -1,53 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { verifyToken } from '@/lib/auth'
-import { cookies } from 'next/headers'
+
+// Force this route to use Node.js runtime instead of Edge Runtime
+export const runtime = 'nodejs'
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies()
-    const token = cookieStore.get('auth-token')?.value
-
-    if (!token) {
+    const currentUser = await getCurrentUser()
+    
+    if (!currentUser) {
       return NextResponse.json(
-        { error: 'No token provided' },
+        { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    const payload = verifyToken(token)
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
-      )
-    }
-
-    // Get user details
+    // Get full user data from database
     const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
+      where: { id: currentUser.id },
       select: {
         id: true,
         email: true,
         firstName: true,
         lastName: true,
         role: true,
-        isActive: true,
         createdAt: true,
-      },
+        updatedAt: true
+      }
     })
 
-    if (!user || !user.isActive) {
+    if (!user) {
       return NextResponse.json(
-        { error: 'User not found or inactive' },
+        { error: 'User not found' },
         { status: 404 }
       )
     }
 
-    return NextResponse.json({
-      data: user,
-    })
-
+    return NextResponse.json({ user })
   } catch (error) {
     console.error('Get current user error:', error)
     return NextResponse.json(
