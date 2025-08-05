@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
         startTime: new Date(startTime),
         endTime: new Date(endTime),
         customerId,
+        employeeId: currentUser.id, // Add required employeeId field
         status: 'SCHEDULED'
       },
       include: {

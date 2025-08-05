@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
         firstName,
         lastName,
-        role: 'USER'
+        role: 'STAFF' // Use valid UserRole enum value instead of 'USER'
       }
     })
 
