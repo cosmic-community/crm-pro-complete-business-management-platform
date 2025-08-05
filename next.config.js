@@ -1,13 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: false,
-  },
-  eslint: {
-    ignoreDuringBuilds: false,
+  experimental: {
+    serverComponentsExternalPackages: ['bcryptjs', 'jsonwebtoken'],
   },
   images: {
-    domains: ['images.unsplash.com'],
+    domains: ['images.unsplash.com', 'cdn.cosmicjs.com'],
   },
 }
 
