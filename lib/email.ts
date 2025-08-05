@@ -1,103 +1,99 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+// Initialize Resend with API key or undefined if not available
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
-export interface EmailData {
-  to: string | string[]
+export interface EmailOptions {
+  to: string
   subject: string
-  html?: string
-  text?: string
+  html: string
   from?: string
 }
 
-export async function sendEmail(data: EmailData): Promise<{ success: boolean; error?: string }> {
+export async function sendEmail(options: EmailOptions): Promise<void> {
+  if (!resend) {
+    console.warn('RESEND_API_KEY not configured. Email sending is disabled.')
+    return
+  }
+
+  const { to, subject, html, from = 'CRM Pro <noreply@crmpro.com>' } = options
+
   try {
-    // Ensure text is always provided as required by Resend API
-    const emailOptions = {
-      from: data.from || 'CRM Pro <noreply@crmprodemp.com>',
-      to: data.to,
-      subject: data.subject,
-      html: data.html,
-      text: data.text || data.subject, // Use subject as fallback text if no text provided
-    }
-
-    const result = await resend.emails.send(emailOptions)
-
-    if (result.error) {
-      console.error('Email send error:', result.error)
-      return { success: false, error: result.error.message }
-    }
-
-    return { success: true }
+    await resend.emails.send({
+      from,
+      to,
+      subject,
+      html,
+    })
   } catch (error) {
-    console.error('Email send error:', error)
-    return { success: false, error: 'Failed to send email' }
+    console.error('Email sending error:', error)
+    throw error
   }
 }
 
-// Email templates
 export const emailTemplates = {
-  welcome: (firstName: string) => ({
-    subject: 'Welcome to CRM Pro!',
+  taskAssigned: (assigneeName: string, taskTitle: string, dueDate?: string) => ({
+    subject: `New Task Assigned: ${taskTitle}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #2563eb;">Welcome to CRM Pro, ${firstName}!</h1>
-        <p>Your account has been successfully created. You can now log in and start managing your business more effectively.</p>
-        <p>If you have any questions, please don't hesitate to contact our support team.</p>
+        <h2 style="color: #333;">New Task Assigned</h2>
+        <p>Hello ${assigneeName},</p>
+        <p>You have been assigned a new task:</p>
+        
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin: 0 0 10px 0; color: #333;">${taskTitle}</h3>
+          ${dueDate ? `<p style="margin: 5px 0; color: #666;"><strong>Due Date:</strong> ${dueDate}</p>` : ''}
+        </div>
+        
+        <p>Please log in to your CRM Pro dashboard to view the full details and update the task status.</p>
+        
+        <p>Best regards,<br>CRM Pro Team</p>
+      </div>
+    `,
+  }),
+
+  appointmentConfirmation: (customerName: string, appointmentDate: string, serviceName: string) => ({
+    subject: `Appointment Confirmation - ${serviceName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Appointment Confirmation</h2>
+        <p>Dear ${customerName},</p>
+        <p>This is to confirm your appointment:</p>
+        
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 5px 0;"><strong>Service:</strong> ${serviceName}</p>
+          <p style="margin: 5px 0;"><strong>Date & Time:</strong> ${appointmentDate}</p>
+        </div>
+        
+        <p>If you need to reschedule or have any questions, please contact us.</p>
+        
+        <p>Thank you,<br>CRM Pro Team</p>
+      </div>
+    `,
+  }),
+
+  welcomeEmail: (customerName: string) => ({
+    subject: 'Welcome to CRM Pro',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #333;">Welcome to CRM Pro!</h2>
+        <p>Dear ${customerName},</p>
+        <p>Thank you for joining CRM Pro. We're excited to have you as part of our community.</p>
+        
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <p>With CRM Pro, you can:</p>
+          <ul>
+            <li>Manage your appointments efficiently</li>
+            <li>Track your tasks and projects</li>
+            <li>Access detailed reports and analytics</li>
+            <li>Collaborate with your team</li>
+          </ul>
+        </div>
+        
+        <p>If you have any questions, feel free to reach out to our support team.</p>
+        
         <p>Best regards,<br>The CRM Pro Team</p>
       </div>
     `,
-    text: `Welcome to CRM Pro, ${firstName}! Your account has been successfully created.`,
-  }),
-
-  appointmentReminder: (customerName: string, appointmentTitle: string, appointmentDate: string) => ({
-    subject: 'Appointment Reminder',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #2563eb;">Appointment Reminder</h1>
-        <p>Hi ${customerName},</p>
-        <p>This is a friendly reminder about your upcoming appointment:</p>
-        <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
-          <strong>${appointmentTitle}</strong><br>
-          ${appointmentDate}
-        </div>
-        <p>If you need to reschedule or cancel, please contact us as soon as possible.</p>
-        <p>We look forward to seeing you!</p>
-      </div>
-    `,
-    text: `Hi ${customerName}, this is a reminder about your appointment: ${appointmentTitle} on ${appointmentDate}.`,
-  }),
-
-  passwordReset: (resetLink: string) => ({
-    subject: 'Reset Your Password',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #2563eb;">Reset Your Password</h1>
-        <p>You requested to reset your password. Click the link below to create a new password:</p>
-        <div style="text-align: center; margin: 24px 0;">
-          <a href="${resetLink}" style="background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Reset Password</a>
-        </div>
-        <p>If you didn't request this, you can safely ignore this email.</p>
-        <p>The link will expire in 24 hours.</p>
-      </div>
-    `,
-    text: `Reset your password by clicking this link: ${resetLink}`,
-  }),
-
-  taskAssigned: (assigneeName: string, taskTitle: string, dueDate?: string) => ({
-    subject: 'New Task Assigned',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #2563eb;">New Task Assigned</h1>
-        <p>Hi ${assigneeName},</p>
-        <p>You have been assigned a new task:</p>
-        <div style="background: #f3f4f6; padding: 16px; border-radius: 8px; margin: 16px 0;">
-          <strong>${taskTitle}</strong><br>
-          ${dueDate ? `Due: ${dueDate}` : 'No due date set'}
-        </div>
-        <p>Please log in to your CRM Pro account to view the full details and update the task status.</p>
-      </div>
-    `,
-    text: `Hi ${assigneeName}, you have been assigned a new task: ${taskTitle}${dueDate ? ` (Due: ${dueDate})` : ''}.`,
   }),
 }

@@ -116,18 +116,23 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Send assignment email if assignee is provided
-    if (task.assignee && task.assignee.email) {
-      const assignmentEmail = emailTemplates.taskAssigned(
-        `${task.assignee.firstName} ${task.assignee.lastName}`,
-        task.title,
-        task.dueDate?.toLocaleDateString()
-      )
-      
-      await sendEmail({
-        to: task.assignee.email,
-        ...assignmentEmail,
-      })
+    // Send assignment email if assignee is provided and email service is configured
+    if (task.assignee && task.assignee.email && process.env.RESEND_API_KEY) {
+      try {
+        const assignmentEmail = emailTemplates.taskAssigned(
+          `${task.assignee.firstName} ${task.assignee.lastName}`,
+          task.title,
+          task.dueDate?.toLocaleDateString()
+        )
+        
+        await sendEmail({
+          to: task.assignee.email,
+          ...assignmentEmail,
+        })
+      } catch (emailError) {
+        console.warn('Failed to send task assignment email:', emailError)
+        // Don't fail the task creation if email fails
+      }
     }
 
     // Create audit log
