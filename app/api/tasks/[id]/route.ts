@@ -4,6 +4,22 @@ import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 import { cookies } from 'next/headers'
 
+// Helper function to extract IP address
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for')
+  const realIP = request.headers.get('x-real-ip')
+  
+  if (forwarded) {
+    return forwarded.split(',')[0]?.trim() || 'unknown'
+  }
+  
+  if (realIP) {
+    return realIP
+  }
+  
+  return 'unknown'
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -56,7 +72,7 @@ export async function PATCH(
         resourceId: updatedTask.id,
         userId: payload.userId,
         details: body,
-        ipAddress: request.ip,
+        ipAddress: getClientIP(request),
         userAgent: request.headers.get('user-agent'),
       },
     })
@@ -117,7 +133,7 @@ export async function DELETE(
         resource: 'task',
         resourceId: id,
         userId: payload.userId,
-        ipAddress: request.ip,
+        ipAddress: getClientIP(request),
         userAgent: request.headers.get('user-agent'),
       },
     })

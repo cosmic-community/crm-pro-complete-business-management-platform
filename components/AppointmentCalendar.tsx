@@ -1,19 +1,25 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calendar, momentLocalizer } from 'react-big-calendar'
+import { Calendar, momentLocalizer, Event } from 'react-big-calendar'
 import moment from 'moment'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
 import type { Appointment } from '@/types'
 
 const localizer = momentLocalizer(moment)
 
-interface CalendarEvent {
+interface CalendarEvent extends Event {
   id: string
   title: string
   start: Date
   end: Date
   resource: Appointment
+}
+
+interface SlotInfo {
+  start: Date
+  end: Date
+  slots: Date[]
 }
 
 export default function AppointmentCalendar() {
@@ -50,7 +56,7 @@ export default function AppointmentCalendar() {
     console.log('Selected appointment:', event.resource)
   }
 
-  const handleSelectSlot = (slotInfo: any) => {
+  const handleSelectSlot = (slotInfo: SlotInfo) => {
     // Handle empty slot click - could create new appointment
     console.log('Selected slot:', slotInfo)
   }
@@ -80,7 +86,7 @@ export default function AppointmentCalendar() {
           defaultView="week"
           step={30}
           showMultiDayTimes
-          eventPropGetter={(event) => ({
+          eventPropGetter={(event: CalendarEvent) => ({
             style: {
               backgroundColor: '#2563eb',
               borderColor: '#1d4ed8',

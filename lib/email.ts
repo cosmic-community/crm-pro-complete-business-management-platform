@@ -12,13 +12,16 @@ export interface EmailData {
 
 export async function sendEmail(data: EmailData): Promise<{ success: boolean; error?: string }> {
   try {
-    const result = await resend.emails.send({
+    // Ensure text is always provided as required by Resend API
+    const emailOptions = {
       from: data.from || 'CRM Pro <noreply@crmprodemp.com>',
       to: data.to,
       subject: data.subject,
       html: data.html,
-      text: data.text,
-    })
+      text: data.text || data.subject, // Use subject as fallback text if no text provided
+    }
+
+    const result = await resend.emails.send(emailOptions)
 
     if (result.error) {
       console.error('Email send error:', result.error)

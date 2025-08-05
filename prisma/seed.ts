@@ -264,22 +264,24 @@ async function main() {
     const service = serviceList[Math.floor(Math.random() * serviceList.length)]
     const employee = [admin, manager, staff][Math.floor(Math.random() * 3)]
     
-    const endTime = new Date(appointmentDate)
-    endTime.setMinutes(appointmentDate.getMinutes() + service.duration)
+    if (service && customer) {
+      const endTime = new Date(appointmentDate)
+      endTime.setMinutes(appointmentDate.getMinutes() + service.duration)
 
-    appointments.push({
-      title: `${service.name} - ${customer.firstName} ${customer.lastName}`,
-      description: `Appointment for ${service.name}`,
-      startTime: appointmentDate,
-      endTime,
-      status: Math.random() > 0.8 ? AppointmentStatus.CANCELLED : 
-              Math.random() > 0.6 ? AppointmentStatus.COMPLETED :
-              AppointmentStatus.SCHEDULED,
-      customerId: customer.id,
-      employeeId: employee.id,
-      serviceId: service.id,
-      locationId: service.locationId,
-    })
+      appointments.push({
+        title: `${service.name} - ${customer.firstName} ${customer.lastName}`,
+        description: `Appointment for ${service.name}`,
+        startTime: appointmentDate,
+        endTime,
+        status: Math.random() > 0.8 ? AppointmentStatus.CANCELLED : 
+                Math.random() > 0.6 ? AppointmentStatus.COMPLETED :
+                AppointmentStatus.SCHEDULED,
+        customerId: customer.id,
+        employeeId: employee.id,
+        serviceId: service.id,
+        locationId: service.locationId,
+      })
+    }
   }
 
   await prisma.appointment.createMany({

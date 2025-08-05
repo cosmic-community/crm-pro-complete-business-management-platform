@@ -4,6 +4,22 @@ import { hashPassword } from '@/lib/auth'
 import { registerSchema, validateInput } from '@/lib/validations'
 import { sendEmail, emailTemplates } from '@/lib/email'
 
+// Helper function to extract IP address
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for')
+  const realIP = request.headers.get('x-real-ip')
+  
+  if (forwarded) {
+    return forwarded.split(',')[0]?.trim() || 'unknown'
+  }
+  
+  if (realIP) {
+    return realIP
+  }
+  
+  return 'unknown'
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -59,7 +75,7 @@ export async function POST(request: NextRequest) {
         resourceId: user.id,
         userId: user.id,
         details: { role: user.role },
-        ipAddress: request.ip,
+        ipAddress: getClientIP(request),
         userAgent: request.headers.get('user-agent'),
       },
     })

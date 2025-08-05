@@ -4,6 +4,22 @@ import { verifyToken } from '@/lib/auth'
 import { customerSchema, validateInput } from '@/lib/validations'
 import { cookies } from 'next/headers'
 
+// Helper function to extract IP address
+function getClientIP(request: NextRequest): string {
+  const forwarded = request.headers.get('x-forwarded-for')
+  const realIP = request.headers.get('x-real-ip')
+  
+  if (forwarded) {
+    return forwarded.split(',')[0]?.trim() || 'unknown'
+  }
+  
+  if (realIP) {
+    return realIP
+  }
+  
+  return 'unknown'
+}
+
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies()
@@ -119,7 +135,7 @@ export async function POST(request: NextRequest) {
         resource: 'customer',
         resourceId: customer.id,
         userId: payload.userId,
-        ipAddress: request.ip,
+        ipAddress: getClientIP(request),
         userAgent: request.headers.get('user-agent'),
       },
     })
