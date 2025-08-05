@@ -4,6 +4,9 @@ import { prisma } from '@/lib/prisma'
 import { verifyToken } from '@/lib/auth'
 import { cookies } from 'next/headers'
 
+// Force this route to use Node.js runtime instead of Edge Runtime
+export const runtime = 'nodejs'
+
 // Helper function to extract IP address
 function getClientIP(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for')

@@ -5,6 +5,9 @@ import { taskSchema, validateInput } from '@/lib/validations'
 import { sendEmail, emailTemplates } from '@/lib/email'
 import { cookies } from 'next/headers'
 
+// Force this route to use Node.js runtime instead of Edge Runtime
+export const runtime = 'nodejs'
+
 // Helper function to extract IP address
 function getClientIP(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for')
