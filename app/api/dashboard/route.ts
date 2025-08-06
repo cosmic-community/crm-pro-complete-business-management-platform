@@ -54,10 +54,10 @@ export async function GET(request: NextRequest) {
       // Staff can only see their own data
       const [tasks, appointments] = await Promise.all([
         prisma.task.count({
-          where: { assignedToId: user.id },
+          where: { assigneeId: user.id },
         }),
         prisma.appointment.count({
-          where: { assignedToId: user.id },
+          where: { assigneeId: user.id },
         }),
       ])
 
