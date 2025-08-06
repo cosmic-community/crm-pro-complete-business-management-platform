@@ -258,9 +258,10 @@ export default function TaskBoard({ tasks, users, onUpdateTask, onCreateTask }: 
           }
 
           const newStatusValue = statusMap[overContainer as string]
-          if (updatedTasks[activeIndex].metadata && newStatusValue) {
+          if (updatedTasks[activeIndex] && updatedTasks[activeIndex].metadata && newStatusValue) {
             updatedTasks[activeIndex] = {
               ...updatedTasks[activeIndex],
+              id: updatedTasks[activeIndex].id,
               metadata: {
                 ...updatedTasks[activeIndex].metadata!,
                 status: newStatusValue
