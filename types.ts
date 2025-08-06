@@ -1,9 +1,11 @@
+import { UserRole as PrismaUserRole } from '@prisma/client'
+
 export interface User {
   id: string
   email: string
   firstName: string
   lastName: string
-  role: UserRole
+  role: PrismaUserRole
   createdAt: Date
   updatedAt: Date
 }
@@ -13,7 +15,7 @@ export interface AuthUser {
   email: string
   firstName: string
   lastName: string
-  role: UserRole
+  role: PrismaUserRole
 }
 
 export interface JWTPayload {
@@ -21,16 +23,13 @@ export interface JWTPayload {
   email: string
   firstName: string
   lastName: string
-  role: UserRole
+  role: PrismaUserRole
   iat: number
   exp: number
 }
 
-export enum UserRole {
-  ADMIN = 'ADMIN',
-  MANAGER = 'MANAGER',
-  STAFF = 'STAFF'
-}
+// Use the Prisma-generated UserRole enum directly
+export type UserRole = PrismaUserRole
 
 export interface Customer {
   id: string
