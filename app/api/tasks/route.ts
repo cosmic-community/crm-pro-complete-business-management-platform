@@ -24,6 +24,38 @@ function getClientIP(request: NextRequest): string {
   return 'unknown'
 }
 
+// Helper function to map Cosmic priority values to Prisma enum values
+function mapPriorityToEnum(priority: string): 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' {
+  switch (priority.toLowerCase()) {
+    case 'high':
+      return 'HIGH'
+    case 'medium':
+      return 'MEDIUM'
+    case 'low':
+      return 'LOW'
+    case 'urgent':
+      return 'URGENT'
+    default:
+      return 'MEDIUM'
+  }
+}
+
+// Helper function to map Cosmic status values to Prisma enum values
+function mapStatusToEnum(status: string): 'TODO' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' {
+  switch (status.toLowerCase()) {
+    case 'open':
+      return 'TODO'
+    case 'in_progress':
+      return 'IN_PROGRESS'
+    case 'completed':
+      return 'COMPLETED'
+    case 'cancelled':
+      return 'CANCELLED'
+    default:
+      return 'TODO'
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies()
@@ -108,12 +140,12 @@ export async function POST(request: NextRequest) {
 
     const task = await prisma.task.create({
       data: {
-        title: taskData.title,
+        title: taskData.task_title, // Use task_title from Cosmic structure
         description: taskData.description,
-        priority: taskData.priority,
-        status: taskData.status,
-        assigneeId: taskData.assigneeId,
-        dueDate: taskData.dueDate ? new Date(taskData.dueDate) : null,
+        priority: mapPriorityToEnum(taskData.priority), // Map to enum value
+        status: mapStatusToEnum(taskData.status), // Map to enum value
+        assigneeId: taskData.assigned_to, // Use assigned_to from Cosmic structure
+        dueDate: taskData.due_date ? new Date(taskData.due_date) : null, // Use due_date from Cosmic structure
       },
       include: {
         assignee: true,
@@ -121,7 +153,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Send assignment email if assignee is provided and email service is configured
-    if (task.assignee?.email && process.env.RESEND_API_KEY) {
+    if (task.assigneeId && task.assignee?.email && process.env.RESEND_API_KEY) {
       try {
         const assigneeName = task.assignee.firstName && task.assignee.lastName 
           ? `${task.assignee.firstName} ${task.assignee.lastName}`
