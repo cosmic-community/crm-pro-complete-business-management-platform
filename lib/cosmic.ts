@@ -416,19 +416,26 @@ export const cosmicOperations = {
     }
   },
 
-  // General search across all types
+  // General search across all types - removed .search() as it's not available in current SDK
   async searchContent(query: string, types: string[] = ['contacts', 'companies', 'deals']) {
     const results: any[] = []
     
+    // Instead of using .search(), we'll use basic filtering
+    // This is a workaround until the search method is available in the SDK
     for (const type of types) {
       try {
         const { objects } = await cosmic.objects
           .find({ type })
           .props(['id', 'title', 'slug', 'metadata', 'type'])
-          .search(query)
           .limit(10)
         
-        results.push(...objects)
+        // Filter results on the client side for now
+        const filtered = objects.filter((obj: any) => 
+          obj.title?.toLowerCase().includes(query.toLowerCase()) ||
+          JSON.stringify(obj.metadata).toLowerCase().includes(query.toLowerCase())
+        )
+        
+        results.push(...filtered)
       } catch (error) {
         // Continue searching other types even if one fails
         console.warn(`Search failed for type ${type}:`, error)

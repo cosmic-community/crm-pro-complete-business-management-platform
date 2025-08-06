@@ -50,7 +50,7 @@ export default function RevenueChart() {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
             <YAxis />
-            <Tooltip formatter={(value) => [`$${value}`, 'Revenue']} />
+            <Tooltip formatter={(value: number | string) => [`$${value}`, 'Revenue']} />
             <Line 
               type="monotone" 
               dataKey="revenue" 
