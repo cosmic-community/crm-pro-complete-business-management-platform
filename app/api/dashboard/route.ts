@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
           where: { assigneeId: user.id },
         }),
         prisma.appointment.count({
-          where: { assigneeId: user.id },
+          where: { employeeId: user.id },
         }),
       ])
 
