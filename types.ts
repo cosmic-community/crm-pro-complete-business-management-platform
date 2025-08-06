@@ -35,6 +35,60 @@ export interface Task {
     lastName: string
     email: string
   }
+  metadata?: {
+    task_title: string
+    description?: string
+    priority: {
+      key: string
+      value: string
+    }
+    status: {
+      key: string
+      value: string
+    }
+    assigned_to?: {
+      id: string
+      first_name?: string
+      last_name?: string
+      metadata?: {
+        first_name: string
+        last_name: string
+      }
+    }
+    related_contact?: any
+    related_company?: any
+    related_deal?: any
+    due_date?: string
+    completed_date?: string
+    category?: {
+      key: string
+      value: string
+    }
+  }
+}
+
+export interface User {
+  id: string
+  first_name?: string
+  last_name?: string
+  email: string
+  metadata?: {
+    first_name: string
+    last_name: string
+    email: string
+    role: {
+      key: string
+      value: string
+    }
+    department?: string
+    phone?: string
+    profile_photo?: {
+      url: string
+      imgix_url: string
+    }
+    territory?: string
+    is_active: boolean
+  }
 }
 
 export interface Customer {

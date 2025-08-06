@@ -56,11 +56,12 @@ function TaskCard({ task, users, onUpdate }: TaskCardProps) {
   }
 
   const assignedUser = users.find(user => user.id === task.metadata?.assigned_to?.id)
-  const priorityColor = {
+  const priorityValue = task.metadata?.priority?.value || 'Medium'
+  const priorityColor: Record<string, string> = {
     High: 'text-red-600 bg-red-50',
     Medium: 'text-yellow-600 bg-yellow-50',
     Low: 'text-green-600 bg-green-50'
-  }[task.metadata?.priority?.value || 'Medium']
+  }
 
   return (
     <div
@@ -72,8 +73,8 @@ function TaskCard({ task, users, onUpdate }: TaskCardProps) {
     >
       <div className="flex justify-between items-start mb-3">
         <h4 className="font-medium text-gray-900 text-sm line-clamp-2">{task.title}</h4>
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColor}`}>
-          {task.metadata?.priority?.value || 'Medium'}
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColor[priorityValue]}`}>
+          {priorityValue}
         </span>
       </div>
       
@@ -95,7 +96,7 @@ function TaskCard({ task, users, onUpdate }: TaskCardProps) {
         {assignedUser && (
           <div className="flex items-center text-sm text-gray-500">
             <User className="h-4 w-4 mr-2" />
-            {assignedUser.metadata?.first_name} {assignedUser.metadata?.last_name}
+            {assignedUser.metadata?.first_name || assignedUser.first_name} {assignedUser.metadata?.last_name || assignedUser.last_name}
           </div>
         )}
 
@@ -219,12 +220,14 @@ export default function TaskBoard({ tasks, users, onUpdateTask, onCreateTask }: 
         'completed': { key: 'completed', value: 'Completed' }
       }
 
-      onUpdateTask(activeTask.id, {
-        metadata: {
-          ...activeTask.metadata,
-          status: statusMap[newStatus]
-        }
-      })
+      if (activeTask.metadata) {
+        onUpdateTask(activeTask.id, {
+          metadata: {
+            ...activeTask.metadata,
+            status: statusMap[newStatus]
+          }
+        })
+      }
     }
 
     setActiveId(null)
@@ -254,11 +257,13 @@ export default function TaskBoard({ tasks, users, onUpdateTask, onCreateTask }: 
             'completed': { key: 'completed', value: 'Completed' }
           }
 
-          updatedTasks[activeIndex] = {
-            ...updatedTasks[activeIndex],
-            metadata: {
-              ...updatedTasks[activeIndex].metadata,
-              status: statusMap[overContainer as string]
+          if (updatedTasks[activeIndex].metadata) {
+            updatedTasks[activeIndex] = {
+              ...updatedTasks[activeIndex],
+              metadata: {
+                ...updatedTasks[activeIndex].metadata!,
+                status: statusMap[overContainer as string]
+              }
             }
           }
 
