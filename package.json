@@ -1,6 +1,6 @@
 {
   "name": "crm-pro-complete-business-management-platform",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,42 +9,41 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "prebuild": "bun run type-check",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "db:migrate": "prisma migrate dev",
-    "db:generate": "prisma generate"
+    "db:reset": "prisma migrate reset --force",
+    "db:setup": "bun run db:generate && bun run db:migrate && bun run db:seed",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
-    "@hello-pangea/dnd": "^16.5.0",
     "@prisma/client": "^5.7.1",
+    "@types/node": "^20.10.5",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
+    "autoprefixer": "^10.4.16",
     "bcryptjs": "^2.4.3",
-    "date-fns": "^2.30.0",
+    "clsx": "^2.0.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.294.0",
-    "next": "^14.0.4",
+    "next": "14.0.4",
+    "postcss": "^8.4.32",
     "react": "^18.2.0",
     "react-big-calendar": "^1.8.5",
     "react-dom": "^18.2.0",
-    "react-hot-toast": "^2.4.1",
     "recharts": "^2.8.0",
-    "resend": "^2.1.0",
+    "tailwindcss": "^3.3.6",
+    "typescript": "^5.3.3",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.5",
-    "@types/node": "^20.10.5",
-    "@types/react": "^18.2.45",
-    "@types/react-big-calendar": "^1.8.9",
-    "@types/react-dom": "^18.2.18",
-    "autoprefixer": "^10.4.16",
     "eslint": "^8.56.0",
-    "eslint-config-next": "^14.0.4",
-    "postcss": "^8.4.32",
+    "eslint-config-next": "14.0.4",
     "prisma": "^5.7.1",
-    "tailwindcss": "^3.4.0",
-    "tsx": "^4.6.2",
-    "typescript": "^5.3.3"
+    "tsx": "^4.6.2"
   }
 }

@@ -22,15 +22,67 @@ export async function POST(request: NextRequest) {
 
     const { email, password } = validation.data
 
-    // Test database connection
+    // Enhanced database connection test with specific error messages
     try {
-      await prisma.$queryRaw`SELECT 1`
-    } catch (dbError) {
-      console.error('Database connection failed:', dbError)
+      console.log('Testing database connection...')
+      await prisma.$queryRaw`SELECT 1 as test`
+      console.log('Database connection test passed')
+    } catch (dbError: any) {
+      console.error('Database connection test failed:', dbError)
+      
+      // Provide specific error messages based on the error
+      let errorMessage = 'Database connection failed'
+      
+      if (dbError?.code === 'ECONNREFUSED') {
+        errorMessage = 'Cannot connect to database. Please ensure PostgreSQL is running.'
+      } else if (dbError?.code === 'ENOTFOUND') {
+        errorMessage = 'Database host not found. Please check your DATABASE_URL.'
+      } else if (dbError?.code === 'P1001') {
+        errorMessage = 'Cannot reach database server. Check connection settings.'
+      } else if (dbError?.code === 'P1002') {
+        errorMessage = 'Database server timed out. Check if database is accessible.'
+      } else if (dbError?.code === 'P1003') {
+        errorMessage = 'Database does not exist. Please create the database first.'
+      } else if (dbError?.code === 'P1008') {
+        errorMessage = 'Database connection timeout. Check network connectivity.'
+      } else if (dbError?.code === 'P1009') {
+        errorMessage = 'Database does not exist on the server.'
+      } else if (dbError?.code === 'P1010') {
+        errorMessage = 'Access denied to database. Check username and password.'
+      } else if (dbError?.code === 'P1011') {
+        errorMessage = 'TLS connection error. Check SSL configuration.'
+      }
+      
       return NextResponse.json(
-        { error: 'Database connection failed' },
+        { 
+          error: errorMessage,
+          details: process.env.NODE_ENV === 'development' ? {
+            code: dbError?.code,
+            message: dbError?.message,
+            suggestion: 'Check if PostgreSQL is running and DATABASE_URL is correct'
+          } : undefined
+        },
         { status: 500 }
       )
+    }
+
+    // Test if the users table exists
+    try {
+      await prisma.user.findFirst({ take: 1 })
+    } catch (tableError: any) {
+      console.error('Users table access failed:', tableError)
+      
+      if (tableError?.code === 'P2021') {
+        return NextResponse.json(
+          { 
+            error: 'Database schema not initialized',
+            details: process.env.NODE_ENV === 'development' ? 'Run: npx prisma migrate dev' : undefined
+          },
+          { status: 500 }
+        )
+      }
+      
+      throw tableError // Re-throw if it's not a schema issue
     }
 
     // Find user by email
@@ -95,7 +147,13 @@ export async function POST(request: NextRequest) {
     }
     
     return NextResponse.json(
-      { error: 'Internal server error', details: process.env.NODE_ENV === 'development' ? String(error) : undefined },
+      { 
+        error: 'Internal server error', 
+        details: process.env.NODE_ENV === 'development' ? {
+          message: String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        } : undefined 
+      },
       { status: 500 }
     )
   }

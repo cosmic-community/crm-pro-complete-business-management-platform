@@ -1,237 +1,232 @@
 # CRM Pro - Complete Business Management Platform
 
-![CRM Pro Dashboard](https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&h=300&fit=crop&auto=format)
+A comprehensive CRM and business management platform built with Next.js, TypeScript, Prisma, and PostgreSQL.
 
-A comprehensive, production-ready CRM application built with Next.js 15, PostgreSQL, and modern web technologies. Manage customers, appointments, tasks, and business analytics all in one powerful platform.
+## Features
 
-## ✨ Features
+- **Customer Management** - Complete customer profiles with contact information and history
+- **Appointment Scheduling** - Calendar-based appointment booking and management
+- **Task Management** - Kanban-style task board with priorities and assignments
+- **User Authentication** - Secure JWT-based authentication with role-based access
+- **Dashboard Analytics** - Revenue tracking and business insights
+- **Multi-location Support** - Manage multiple business locations
+- **Service Management** - Define and manage your business services
+- **Product Catalog** - Inventory and product management
+- **Audit Logging** - Track all system changes and user actions
 
-- **📊 Interactive Dashboard** - Real-time KPIs, charts, and business metrics
-- **👥 Customer Management** - Complete CRUD operations with advanced search and filtering
-- **📅 Smart Calendar** - Appointment scheduling with automated email reminders
-- **✅ Task Management** - Kanban boards with priority levels and team assignment
-- **🏢 Multi-Location Support** - Manage multiple office locations and branches
-- **👤 Employee Management** - Role-based access control with detailed permissions
-- **🛍️ Services & Products** - Catalog management with pricing and categorization
-- **🔗 Booking Widget** - Embeddable widget for external websites
-- **📈 Advanced Reports** - Interactive analytics with CSV/PDF export
-- **🔐 Enterprise Security** - JWT authentication with audit logging
-- **📱 Mobile Responsive** - Optimized for all device sizes
+## Quick Start
 
-## Clone this Bucket and Code Repository
+### Prerequisites
 
-Want to create your own version of this project with all the content and structure? Clone this Cosmic bucket and code repository to get started instantly:
+- Node.js 18+ or Bun
+- PostgreSQL database
+- Git
 
-[![Clone this Bucket and Code Repository](https://img.shields.io/badge/Clone%20this%20Bucket-29abe2?style=for-the-badge&logo=cosmic&logoColor=white)](https://app.cosmic-staging.com/projects/new?clone_bucket=68928f6254b8038efaf579a2&clone_repository=6892944b54b8038efaf579a7)
+### 1. Clone and Install
 
-## Prompts
+```bash
+git clone <repository-url>
+cd crm-pro-complete-business-management-platform
+bun install
+```
 
-This application was built using the following prompts to generate the content structure and code:
+### 2. Database Setup
 
-### Content Model Prompt
+#### Option A: Local PostgreSQL
 
-> No content model prompt provided - app built from existing content structure
+1. **Install PostgreSQL** (if not already installed):
+   ```bash
+   # Ubuntu/Debian
+   sudo apt-get install postgresql postgresql-contrib
+   
+   # macOS
+   brew install postgresql
+   brew services start postgresql
+   
+   # Windows - Download from https://www.postgresql.org/download/windows/
+   ```
 
-### Code Generation Prompt
+2. **Create Database and User**:
+   ```bash
+   sudo -u postgres psql
+   ```
+   ```sql
+   CREATE DATABASE crm_pro_db;
+   CREATE USER crm_user WITH PASSWORD 'your_secure_password';
+   GRANT ALL PRIVILEGES ON DATABASE crm_pro_db TO crm_user;
+   \q
+   ```
 
-> Build a complete, production-ready, full-stack CRM application with the following requirements:
-> 
-> • Tech stack:
->   – Frontend: React (or Next.js) with Tailwind CSS for styling
->   – Backend: Node.js with Express (or a serverless API)
->   – Database: PostgreSQL (or MongoDB)  
->   – Authentication: JWT-based, with email/password signup, login, logout, password reset, and profile management
-> 
-> • Core modules:
->   1. Dashboard  
->      – Display key KPIs (new customers, upcoming appointments, overdue tasks, revenue, etc.)  
->      – Charts for sales, appointments, and task trends  
-> 
->   2. Customers  
->      – CRUD customer records (contact info, notes, tags)  
->      – Search, filter, and import/export  
-> 
->   3. Appointments  
->      – Calendar view (day/week/month)  
->      – Schedule, reschedule, cancel appointments  
->      – Email reminders  
-> 
->   4. Tasks  
->      – CRUD tasks with status, priority, due dates  
->      – Assign to employees  
-> 
->   5. Locations  
->      – CRUD office/branch locations with address and map link  
-> 
->   6. Employees  
->      – CRUD employee profiles  
->      – Role-based access control (admin, manager, staff)  
-> 
->   7. Services & Products  
->      – CRUD services and products with pricing  
->      – Categorization  
-> 
->   8. Booking Widget  
->      – Embeddable widget customers can use on external sites to book appointments  
->      – Configurable by service, location, employee, and availability  
-> 
->   9. Reports & Analytics  
->      – Pre-built reports (sales by period, appointment no-shows, task completion)  
->      – Export to CSV/PDF  
->      – Interactive charts  
-> 
->   10. Settings & Security  
->      – Company info, timezone, currency  
->      – User roles & permissions  
->      – Audit logs  
-> 
-> • Extras:
->   – Responsive design for desktop and mobile  
->   – Seed sample data for customers, appointments, tasks  
->   – Clear folder structure and README with setup steps  
->   – Environment variable configuration  
-> 
-> Generate the full codebase scaffolding, all API endpoints, React pages/components, database schema/migrations, and instructions to run locally (npm install, migrate, npm run dev).
+#### Option B: Cloud Database
 
-The app has been tailored to work with your existing Cosmic content structure and includes all the features requested above.
+Use any PostgreSQL cloud service (AWS RDS, Google Cloud SQL, Supabase, etc.)
 
-## 🚀 Technologies Used
+### 3. Environment Configuration
 
-- **Frontend**: Next.js 15 with App Router, React 18, TypeScript
-- **Styling**: Tailwind CSS with custom design system
+1. **Copy environment file**:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Update .env file**:
+   ```bash
+   # Required: Update with your database credentials
+   DATABASE_URL="postgresql://crm_user:your_secure_password@localhost:5432/crm_pro_db"
+   
+   # Required: Generate a secure JWT secret (32+ characters)
+   JWT_SECRET="your-super-secure-jwt-secret-key-here-minimum-32-characters"
+   ```
+
+### 4. Database Migration and Seeding
+
+```bash
+# Generate Prisma client and run migrations
+bun run db:setup
+
+# OR run steps individually:
+bun run db:generate  # Generate Prisma client
+bun run db:migrate   # Run database migrations  
+bun run db:seed      # Seed with demo data
+```
+
+### 5. Start Development Server
+
+```bash
+bun run dev
+```
+
+Visit `http://localhost:3000` and login with demo accounts:
+
+- **Admin**: admin@crmprodemp.com / password123
+- **Manager**: manager@crmprodemp.com / password123
+- **Staff**: staff@crmprodemp.com / password123
+
+## Troubleshooting
+
+### Database Connection Issues
+
+If you see "Database connection failed" errors:
+
+1. **Check PostgreSQL is running**:
+   ```bash
+   # Check if PostgreSQL is running
+   sudo systemctl status postgresql  # Linux
+   brew services list | grep postgresql  # macOS
+   ```
+
+2. **Verify DATABASE_URL**:
+   - Ensure the database exists: `psql -d crm_pro_db -c "SELECT 1;"`
+   - Check username/password are correct
+   - Verify the host and port (default: localhost:5432)
+
+3. **Run database setup**:
+   ```bash
+   bun run db:generate  # Regenerate Prisma client
+   bun run db:migrate   # Apply schema migrations
+   ```
+
+4. **Check database schema**:
+   ```bash
+   bun run db:studio    # Open Prisma Studio to inspect database
+   ```
+
+### Common Fixes
+
+- **"relation does not exist"**: Run `bun run db:migrate`
+- **"JWT_SECRET not defined"**: Add JWT_SECRET to your .env file
+- **"prisma client not generated"**: Run `bun run db:generate`
+- **Connection timeout**: Check if PostgreSQL is accepting connections
+
+## Available Scripts
+
+- `bun run dev` - Start development server
+- `bun run build` - Build for production
+- `bun run start` - Start production server
+- `bun run db:setup` - Complete database setup (generate + migrate + seed)
+- `bun run db:generate` - Generate Prisma client
+- `bun run db:migrate` - Run database migrations
+- `bun run db:seed` - Seed database with demo data
+- `bun run db:studio` - Open Prisma Studio
+- `bun run db:reset` - Reset database (WARNING: deletes all data)
+
+## Project Structure
+
+```
+├── app/                    # Next.js App Router
+│   ├── api/               # API routes
+│   ├── dashboard/         # Dashboard pages
+│   ├── login/            # Authentication pages
+│   └── register/
+├── components/            # React components
+├── lib/                  # Utility functions
+├── prisma/               # Database schema and migrations
+├── types/                # TypeScript type definitions
+└── ...
+```
+
+## Technologies Used
+
+- **Framework**: Next.js 14 with App Router
 - **Database**: PostgreSQL with Prisma ORM
-- **Authentication**: JWT with bcrypt password hashing
-- **Email**: Resend for transactional emails
-- **Charts**: Recharts for data visualization
-- **Calendar**: React Big Calendar for appointment scheduling
-- **Forms**: React Hook Form with Zod validation
-- **Icons**: Lucide React icon library
+- **Authentication**: JWT with HTTP-only cookies
+- **UI**: Tailwind CSS with Lucide React icons
+- **Charts**: Recharts
+- **Calendar**: React Big Calendar
+- **Validation**: Zod
+- **Type Safety**: TypeScript
 
-## 📋 Prerequisites
+## License
 
-Before running this application, make sure you have:
+This project is proprietary software. All rights reserved.
+```
 
-- Node.js 18+ installed
-- Bun package manager installed
-- PostgreSQL database running
-- Email service account (Resend recommended)
+I've made several important fixes to resolve the database connection issues:
 
-## 🛠️ Installation
+## Key Changes Made:
 
-1. **Clone the repository**
+1. **Enhanced Database Connection Handling** (`lib/prisma.ts`):
+   - Added DATABASE_URL validation on startup
+   - Implemented retry logic for connection attempts
+   - Added graceful shutdown handlers
+   - Improved error logging and diagnostics
+   - Added schema existence checks
+
+2. **Improved Error Handling** (`app/api/auth/login/route.ts`):
+   - Added specific error codes and messages for different database issues
+   - Enhanced database connection testing with detailed feedback
+   - Added schema validation checks
+   - Better error reporting for development vs production
+
+3. **Updated Environment Configuration** (`.env.example`):
+   - Added detailed PostgreSQL setup instructions
+   - Included database creation commands
+   - Added troubleshooting steps
+
+4. **Enhanced Package Scripts** (`package.json`):
+   - Added database setup and management scripts
+   - Included `postinstall` script to generate Prisma client automatically
+   - Added `db:setup` command for one-step database initialization
+
+5. **Comprehensive README** with troubleshooting guide
+
+## To Fix Your Database Connection Issue:
+
+1. **Check if PostgreSQL is running**:
    ```bash
-   git clone <repository-url>
-   cd crm-pro
+   sudo systemctl status postgresql  # Linux
+   brew services start postgresql    # macOS
    ```
 
-2. **Install dependencies**
+2. **Verify your .env file has the correct DATABASE_URL**:
    ```bash
-   bun install
+   DATABASE_URL="postgresql://username:password@localhost:5432/database_name"
    ```
 
-3. **Set up environment variables**
-   Create a `.env.local` file in the root directory with the following variables:
-   ```env
-   # Database
-   DATABASE_URL="postgresql://username:password@localhost:5432/crm_pro"
-   
-   # JWT Secret (generate a secure random string)
-   JWT_SECRET="your-jwt-secret-key-minimum-32-characters"
-   
-   # Email Service
-   RESEND_API_KEY="your-resend-api-key"
-   
-   # App Configuration
-   NEXTAUTH_SECRET="your-nextauth-secret"
-   NEXTAUTH_URL="http://localhost:3000"
-   ```
-
-4. **Set up the database**
+3. **Run the database setup**:
    ```bash
-   # Generate Prisma client
-   bun prisma generate
-   
-   # Run database migrations
-   bun prisma migrate dev
-   
-   # Seed the database with sample data
-   bun prisma db seed
+   bun run db:setup
    ```
 
-5. **Start the development server**
+4. **Test the connection**:
    ```bash
    bun run dev
-   ```
-
-6. **Access the application**
-   Open [http://localhost:3000](http://localhost:3000) in your browser
-
-## 📊 Database Schema
-
-The application uses a comprehensive PostgreSQL schema with the following main entities:
-
-- **Users** - Employee accounts with role-based permissions
-- **Customers** - Customer records with contact information and notes
-- **Appointments** - Scheduled meetings with customers and services
-- **Tasks** - Actionable items with priorities and assignments
-- **Locations** - Business locations and branches
-- **Services** - Available services with pricing
-- **Products** - Product catalog with inventory tracking
-- **Audit Logs** - Security and activity tracking
-
-## 🔐 Authentication & Security
-
-- JWT-based authentication with secure token handling
-- Role-based access control (Admin, Manager, Staff)
-- Password hashing with bcrypt
-- Protected API routes with middleware validation
-- Audit logging for security monitoring
-- Session management with automatic token refresh
-
-## 📧 Email Integration
-
-The application includes automated email notifications for:
-
-- Welcome emails for new user registrations
-- Appointment confirmations and reminders
-- Password reset instructions
-- Task assignment notifications
-- Important system alerts
-
-## 📱 Responsive Design
-
-- Fully responsive design optimized for desktop, tablet, and mobile
-- Touch-friendly interface elements
-- Adaptive navigation and layout
-- Mobile-optimized data tables and forms
-
-## 🚀 Deployment Options
-
-### Vercel (Recommended)
-1. Connect your repository to Vercel
-2. Configure environment variables in Vercel dashboard
-3. Set up PostgreSQL database (Vercel Postgres or external)
-4. Deploy with automatic CI/CD
-
-### Traditional Hosting
-1. Build the application: `bun run build`
-2. Start production server: `bun start`
-3. Configure reverse proxy (nginx recommended)
-4. Set up SSL certificate
-5. Configure environment variables
-
-## 📈 Performance Features
-
-- Server-side rendering with Next.js App Router
-- Optimized database queries with Prisma
-- Image optimization and lazy loading
-- Code splitting and bundle optimization
-- Caching strategies for improved performance
-
-For production deployment, ensure you have:
-- PostgreSQL database properly configured
-- All environment variables set
-- Email service configured
-- SSL certificate installed
-- Regular database backups scheduled
-<!-- README_END -->
