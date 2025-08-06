@@ -219,7 +219,7 @@ export const cosmicOperations = {
         .skip(params?.skip || 0)
       
       return objects as CosmicContact[]
-    } catch (error) {
+    } catch (error: any) {
       if (error.status === 404) {
         return []
       }
@@ -235,7 +235,7 @@ export const cosmicOperations = {
         .depth(1)
       
       return object as CosmicContact
-    } catch (error) {
+    } catch (error: any) {
       if (error.status === 404) {
         return null
       }
@@ -254,7 +254,7 @@ export const cosmicOperations = {
         .skip(params?.skip || 0)
       
       return objects as CosmicCompany[]
-    } catch (error) {
+    } catch (error: any) {
       if (error.status === 404) {
         return []
       }
@@ -270,7 +270,7 @@ export const cosmicOperations = {
         .depth(1)
       
       return object as CosmicCompany
-    } catch (error) {
+    } catch (error: any) {
       if (error.status === 404) {
         return null
       }
@@ -289,7 +289,7 @@ export const cosmicOperations = {
         .skip(params?.skip || 0)
       
       return objects as CosmicDeal[]
-    } catch (error) {
+    } catch (error: any) {
       if (error.status === 404) {
         return []
       }
@@ -305,7 +305,7 @@ export const cosmicOperations = {
         .depth(1)
       
       return object as CosmicDeal
-    } catch (error) {
+    } catch (error: any) {
       if (error.status === 404) {
         return null
       }
@@ -324,7 +324,7 @@ export const cosmicOperations = {
         .skip(params?.skip || 0)
       
       return objects as CosmicTask[]
-    } catch (error) {
+    } catch (error: any) {
       if (error.status === 404) {
         return []
       }
@@ -340,7 +340,7 @@ export const cosmicOperations = {
         .depth(1)
       
       return object as CosmicTask
-    } catch (error) {
+    } catch (error: any) {
       if (error.status === 404) {
         return null
       }
@@ -358,7 +358,7 @@ export const cosmicOperations = {
         .skip(params?.skip || 0)
       
       return objects as CosmicUser[]
-    } catch (error) {
+    } catch (error: any) {
       if (error.status === 404) {
         return []
       }
@@ -373,7 +373,7 @@ export const cosmicOperations = {
         .props(['id', 'title', 'slug', 'metadata'])
       
       return object as CosmicUser
-    } catch (error) {
+    } catch (error: any) {
       if (error.status === 404) {
         return null
       }
@@ -392,7 +392,7 @@ export const cosmicOperations = {
         .skip(params?.skip || 0)
       
       return objects as CosmicActivity[]
-    } catch (error) {
+    } catch (error: any) {
       if (error.status === 404) {
         return []
       }
@@ -408,7 +408,7 @@ export const cosmicOperations = {
         .depth(1)
       
       return object as CosmicActivity
-    } catch (error) {
+    } catch (error: any) {
       if (error.status === 404) {
         return null
       }
@@ -418,7 +418,7 @@ export const cosmicOperations = {
 
   // General search across all types
   async searchContent(query: string, types: string[] = ['contacts', 'companies', 'deals']) {
-    const results = []
+    const results: any[] = []
     
     for (const type of types) {
       try {
