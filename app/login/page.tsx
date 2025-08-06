@@ -49,13 +49,7 @@ export default function LoginPage() {
             Sign in to CRM Pro
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <Link
-              href="/register"
-              className="font-medium text-primary-600 hover:text-primary-500"
-            >
-              create a new account
-            </Link>
+            Access your business management platform
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -105,15 +99,6 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <Link
-              href="/forgot-password"
-              className="text-sm text-primary-600 hover:text-primary-500"
-            >
-              Forgot your password?
-            </Link>
-          </div>
-
           <div>
             <button
               type="submit"
@@ -126,12 +111,12 @@ export default function LoginPage() {
 
           <div className="mt-6">
             <div className="text-center text-sm text-gray-600">
-              Demo accounts:
+              Demo accounts available:
             </div>
             <div className="mt-2 text-xs text-gray-500 space-y-1">
-              <div>Admin: admin@crmprodemp.com / password123</div>
-              <div>Manager: manager@crmprodemp.com / password123</div>
-              <div>Staff: staff@crmprodemp.com / password123</div>
+              <div><strong>Sales Manager:</strong> sarah.johnson@company.com</div>
+              <div><strong>Sales Rep:</strong> mike.chen@company.com</div>
+              <div className="text-gray-400 text-center mt-1">Password: demo123</div>
             </div>
           </div>
         </form>

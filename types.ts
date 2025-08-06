@@ -1,13 +1,4 @@
-export interface JWTPayload {
-  userId: string
-  email: string
-  firstName?: string
-  lastName?: string
-  role: string
-  iat: number
-  exp: number
-}
-
+// Authentication Types
 export interface AuthUser {
   id: string
   email: string
@@ -16,68 +7,258 @@ export interface AuthUser {
   role: string
 }
 
-export type UserRole = 'ADMIN' | 'MANAGER' | 'STAFF'
-
-export interface User {
-  id: string
+export interface JWTPayload {
+  userId: string
   email: string
   firstName: string
   lastName: string
-  role: UserRole
-  isActive: boolean
-  createdAt: Date
-  updatedAt: Date
+  role: string
+  iat?: number
+  exp?: number
 }
 
-export interface Customer {
+// Cosmic CMS Types
+export interface CosmicObject {
   id: string
-  firstName: string
-  lastName: string
+  slug: string
+  title: string
+  content?: string
+  status: string
+  created_at: string
+  modified_at: string
+  published_at?: string
+  type: string
+  metadata?: Record<string, any>
+  thumbnail?: string
+}
+
+export interface CosmicUser extends CosmicObject {
+  metadata: {
+    first_name: string
+    last_name: string
+    email: string
+    role: {
+      key: string
+      value: string
+    }
+    department?: string
+    phone?: string
+    profile_photo?: {
+      url: string
+      imgix_url: string
+    }
+    territory?: string
+    is_active: boolean
+  }
+}
+
+export interface CosmicContact extends CosmicObject {
+  metadata: {
+    first_name: string
+    last_name: string
+    email: string
+    phone?: string
+    company?: CosmicCompany | string
+    job_title?: string
+    lead_source?: {
+      key: string
+      value: string
+    }
+    status: {
+      key: string
+      value: string
+    }
+    profile_photo?: {
+      url: string
+      imgix_url: string
+    }
+    notes?: string
+    tags?: string
+  }
+}
+
+export interface CosmicCompany extends CosmicObject {
+  metadata: {
+    company_name: string
+    website?: string
+    industry?: {
+      key: string
+      value: string
+    }
+    company_size?: {
+      key: string
+      value: string
+    }
+    annual_revenue?: number
+    address?: {
+      street: string
+      city: string
+      state: string
+      zip: string
+    }
+    logo?: {
+      url: string
+      imgix_url: string
+    }
+    description?: string
+    account_status: {
+      key: string
+      value: string
+    }
+  }
+}
+
+export interface CosmicDeal extends CosmicObject {
+  metadata: {
+    deal_name: string
+    contact: CosmicContact | string
+    company?: CosmicCompany | string
+    deal_value?: number
+    stage: {
+      key: string
+      value: string
+    }
+    probability?: number
+    expected_close_date?: string
+    actual_close_date?: string
+    deal_source?: {
+      key: string
+      value: string
+    }
+    assigned_to?: CosmicUser | string
+    notes?: string
+    next_action?: string
+  }
+}
+
+export interface CosmicTask extends CosmicObject {
+  metadata: {
+    task_title: string
+    description?: string
+    priority: {
+      key: string
+      value: string
+    }
+    status: {
+      key: string
+      value: string
+    }
+    assigned_to?: CosmicUser | string
+    related_contact?: CosmicContact | string
+    related_company?: CosmicCompany | string
+    related_deal?: CosmicDeal | string
+    due_date?: string
+    completed_date?: string
+    category?: {
+      key: string
+      value: string
+    }
+  }
+}
+
+export interface CosmicActivity extends CosmicObject {
+  metadata: {
+    activity_type: {
+      key: string
+      value: string
+    }
+    subject: string
+    description?: string
+    contact?: CosmicContact | string
+    company?: CosmicCompany | string
+    deal?: CosmicDeal | string
+    activity_date: string
+    duration?: number
+    outcome?: {
+      key: string
+      value: string
+    }
+    assigned_to?: CosmicUser | string
+    follow_up_required: boolean
+    next_follow_up_date?: string
+  }
+}
+
+// Dashboard Types
+export interface DashboardStats {
+  totalContacts: number
+  totalDeals: number
+  totalRevenue: number
+  activeTasks: number
+  dealsWon: number
+  dealsLost: number
+  avgDealValue: number
+  conversionRate: number
+}
+
+// Form Types
+export interface ContactForm {
+  first_name: string
+  last_name: string
   email: string
   phone?: string
-  address?: string
-  city?: string
-  state?: string
-  zipCode?: string
-  country: string
-  dateOfBirth?: Date
+  company?: string
+  job_title?: string
+  lead_source?: string
+  status: string
   notes?: string
-  tags: string[]
-  isActive: boolean
-  createdAt: Date
-  updatedAt: Date
+  tags?: string
 }
 
-export interface Appointment {
-  id: string
-  title: string
+export interface CompanyForm {
+  company_name: string
+  website?: string
+  industry?: string
+  company_size?: string
+  annual_revenue?: number
+  address?: {
+    street: string
+    city: string
+    state: string
+    zip: string
+  }
   description?: string
-  startTime: Date
-  endTime: Date
-  status: 'SCHEDULED' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
-  notes?: string
-  customerId: string
-  employeeId: string
-  serviceId?: string
-  locationId?: string
-  createdAt: Date
-  updatedAt: Date
-  customer?: Customer
-  employee?: User
+  account_status: string
 }
 
-export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+export interface DealForm {
+  deal_name: string
+  contact: string
+  company?: string
+  deal_value?: number
+  stage: string
+  probability?: number
+  expected_close_date?: string
+  deal_source?: string
+  assigned_to?: string
+  notes?: string
+  next_action?: string
+}
 
-export interface Task {
-  id: string
-  title: string
+export interface TaskForm {
+  task_title: string
   description?: string
-  status: TaskStatus
-  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
-  dueDate?: Date
-  completedAt?: Date
-  assigneeId?: string
-  assignee?: User
-  createdAt: Date
-  updatedAt: Date
+  priority: string
+  status: string
+  assigned_to?: string
+  related_contact?: string
+  related_company?: string
+  related_deal?: string
+  due_date?: string
+  category?: string
+}
+
+export interface ActivityForm {
+  activity_type: string
+  subject: string
+  description?: string
+  contact?: string
+  company?: string
+  deal?: string
+  activity_date: string
+  duration?: number
+  outcome?: string
+  assigned_to?: string
+  follow_up_required: boolean
+  next_follow_up_date?: string
 }

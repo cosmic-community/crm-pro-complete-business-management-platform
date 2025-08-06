@@ -1,5 +1,4 @@
 import jwt from 'jsonwebtoken'
-import bcrypt from 'bcryptjs'
 import { cookies } from 'next/headers'
 import type { JWTPayload, AuthUser } from '@/types'
 
@@ -7,6 +6,16 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-for-development-on
 
 if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
   throw new Error('JWT_SECRET environment variable is required in production')
+}
+
+export interface JWTPayload {
+  userId: string
+  email: string
+  firstName: string
+  lastName: string
+  role: string
+  iat?: number
+  exp?: number
 }
 
 export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
@@ -25,25 +34,6 @@ export function verifyToken(token: string): JWTPayload | null {
   } catch (error) {
     console.error('Token verification failed:', error)
     return null
-  }
-}
-
-export async function hashPassword(password: string): Promise<string> {
-  try {
-    const saltRounds = 12
-    return await bcrypt.hash(password, saltRounds)
-  } catch (error) {
-    console.error('Password hashing failed:', error)
-    throw new Error('Failed to hash password')
-  }
-}
-
-export async function comparePassword(password: string, hash: string): Promise<boolean> {
-  try {
-    return await bcrypt.compare(password, hash)
-  } catch (error) {
-    console.error('Password comparison failed:', error)
-    return false
   }
 }
 
