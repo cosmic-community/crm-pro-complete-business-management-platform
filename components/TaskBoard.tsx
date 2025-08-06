@@ -220,11 +220,12 @@ export default function TaskBoard({ tasks, users, onUpdateTask, onCreateTask }: 
         'completed': { key: 'completed', value: 'Completed' }
       }
 
-      if (activeTask.metadata) {
+      const newStatusValue = statusMap[newStatus]
+      if (activeTask.metadata && newStatusValue) {
         onUpdateTask(activeTask.id, {
           metadata: {
             ...activeTask.metadata,
-            status: statusMap[newStatus]
+            status: newStatusValue
           }
         })
       }
@@ -247,7 +248,6 @@ export default function TaskBoard({ tasks, users, onUpdateTask, onCreateTask }: 
     if (activeContainer !== overContainer) {
       setBoardTasks(prevTasks => {
         const activeIndex = prevTasks.findIndex(task => task.id === active.id)
-        const overIndex = prevTasks.findIndex(task => task.id === over.id)
         
         if (activeIndex !== -1) {
           const updatedTasks = [...prevTasks]
@@ -257,12 +257,13 @@ export default function TaskBoard({ tasks, users, onUpdateTask, onCreateTask }: 
             'completed': { key: 'completed', value: 'Completed' }
           }
 
-          if (updatedTasks[activeIndex].metadata) {
+          const newStatusValue = statusMap[overContainer as string]
+          if (updatedTasks[activeIndex].metadata && newStatusValue) {
             updatedTasks[activeIndex] = {
               ...updatedTasks[activeIndex],
               metadata: {
                 ...updatedTasks[activeIndex].metadata!,
-                status: statusMap[overContainer as string]
+                status: newStatusValue
               }
             }
           }
