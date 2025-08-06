@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "prebuild": "bun run type-check"
+    "prebuild": "npm run type-check"
   },
   "dependencies": {
     "@cosmicjs/sdk": "^1.5.5",
@@ -19,11 +19,11 @@
     "bcryptjs": "^2.4.3",
     "date-fns": "^3.3.1",
     "jsonwebtoken": "^9.0.2",
-    "lucide-react": "^0.344.0",
+    "lucide-react": "^0.460.0",
     "next": "14.1.0",
-    "react": "^18",
+    "react": "^18.2.0",
     "react-big-calendar": "^1.10.3",
-    "react-dom": "^18",
+    "react-dom": "^18.2.0",
     "react-hook-form": "^7.50.1",
     "recharts": "^2.11.0",
     "zod": "^3.22.4"
