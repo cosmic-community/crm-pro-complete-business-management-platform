@@ -113,7 +113,6 @@ export async function POST(request: NextRequest) {
         priority: taskData.priority,
         status: taskData.status,
         assigneeId: taskData.assigneeId,
-        category: taskData.category,
         dueDate: taskData.dueDate ? new Date(taskData.dueDate) : null,
       },
       include: {
