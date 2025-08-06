@@ -3,30 +3,18 @@ import bcrypt from 'bcryptjs'
 import { cookies } from 'next/headers'
 import type { JWTPayload, AuthUser } from '@/types'
 
-const JWT_SECRET = process.env.JWT_SECRET
-
-// Only throw error if JWT_SECRET is missing and we're not in build time
-if (!JWT_SECRET && process.env.NODE_ENV !== 'production' && typeof window === 'undefined') {
-  console.warn('JWT_SECRET environment variable is not set. Authentication will not work properly.')
-}
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-for-development'
 
 export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
-  if (!JWT_SECRET) {
-    throw new Error('JWT_SECRET environment variable is required')
-  }
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' })
 }
 
 export function verifyToken(token: string): JWTPayload | null {
-  if (!JWT_SECRET) {
-    console.error('JWT_SECRET environment variable is required')
-    return null
-  }
-  
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload
     return decoded
   } catch (error) {
+    console.error('Token verification failed:', error)
     return null
   }
 }
@@ -37,14 +25,15 @@ export async function hashPassword(password: string): Promise<string> {
 }
 
 export async function comparePassword(password: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(password, hash)
+  try {
+    return await bcrypt.compare(password, hash)
+  } catch (error) {
+    console.error('Password comparison failed:', error)
+    return false
+  }
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  if (!JWT_SECRET) {
-    return null
-  }
-
   try {
     const cookieStore = await cookies()
     const token = cookieStore.get('auth-token')?.value
@@ -61,8 +50,8 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     return {
       id: payload.userId,
       email: payload.email,
-      firstName: '',
-      lastName: '',
+      firstName: payload.firstName || '',
+      lastName: payload.lastName || '',
       role: payload.role,
     }
   } catch (error) {
@@ -71,10 +60,12 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   }
 }
 
-export function setAuthCookie(token: string) {
-  return `auth-token=${token}; HttpOnly; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Strict; Secure`
+export function setAuthCookie(token: string): string {
+  const isProduction = process.env.NODE_ENV === 'production'
+  return `auth-token=${token}; HttpOnly; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Strict${isProduction ? '; Secure' : ''}`
 }
 
-export function clearAuthCookie() {
-  return `auth-token=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict; Secure`
+export function clearAuthCookie(): string {
+  const isProduction = process.env.NODE_ENV === 'production'
+  return `auth-token=; HttpOnly; Path=/; Max-Age=0; SameSite=Strict${isProduction ? '; Secure' : ''}`
 }

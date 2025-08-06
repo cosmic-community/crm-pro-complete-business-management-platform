@@ -3,15 +3,16 @@ import { hashPassword, comparePassword, generateToken, setAuthCookie } from '@/l
 import { prisma } from '@/lib/prisma'
 import { loginSchema } from '@/lib/validations'
 
-// Force this route to use Node.js runtime instead of Edge Runtime
 export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    console.log('Login attempt for email:', body.email)
     
     const validation = loginSchema.safeParse(body)
     if (!validation.success) {
+      console.error('Validation failed:', validation.error.flatten())
       return NextResponse.json(
         { error: 'Invalid input', details: validation.error.flatten() },
         { status: 400 }
@@ -22,19 +23,23 @@ export async function POST(request: NextRequest) {
 
     // Find user by email
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email: email.toLowerCase().trim() }
     })
 
     if (!user) {
+      console.error('User not found for email:', email)
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
       )
     }
 
+    console.log('User found:', { id: user.id, email: user.email, role: user.role })
+
     // Verify password
     const isValidPassword = await comparePassword(password, user.password)
     if (!isValidPassword) {
+      console.error('Invalid password for user:', email)
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
@@ -45,11 +50,16 @@ export async function POST(request: NextRequest) {
     const token = generateToken({
       userId: user.id,
       email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
       role: user.role
     })
 
+    console.log('Login successful for user:', email)
+
     // Create response with user data
     const response = NextResponse.json({
+      success: true,
       user: {
         id: user.id,
         email: user.email,
