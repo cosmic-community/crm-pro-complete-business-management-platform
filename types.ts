@@ -66,11 +66,13 @@ export interface Appointment {
   employee?: User
 }
 
+export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+
 export interface Task {
   id: string
   title: string
   description?: string
-  status: 'TODO' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+  status: TaskStatus
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
   dueDate?: Date
   completedAt?: Date
