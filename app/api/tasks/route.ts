@@ -122,10 +122,14 @@ export async function POST(request: NextRequest) {
     })
 
     // Send assignment email if assignee is provided and email service is configured
-    if (task.assignee && task.assignee.email && process.env.RESEND_API_KEY) {
+    if (task.assignee?.email && process.env.RESEND_API_KEY) {
       try {
+        const assigneeName = task.assignee.firstName && task.assignee.lastName 
+          ? `${task.assignee.firstName} ${task.assignee.lastName}`
+          : task.assignee.email;
+        
         const assignmentEmail = emailTemplates.taskAssigned(
-          `${task.assignee.firstName} ${task.assignee.lastName}`,
+          assigneeName,
           task.title,
           task.dueDate?.toLocaleDateString()
         )
