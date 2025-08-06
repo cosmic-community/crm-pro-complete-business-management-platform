@@ -119,7 +119,7 @@ export function validateInput<T>(schema: z.ZodSchema<T>, data: unknown): { succe
     return { success: true, data: result.data }
   }
   
-  const errors = result.error.errors.map(err => err.message)
+  const errors = result.error.errors.map((err: z.ZodIssue) => err.message)
   return { success: false, errors }
 }
 

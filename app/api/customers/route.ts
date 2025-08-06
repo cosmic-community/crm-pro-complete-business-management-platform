@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const customerData = validation.data!
+    const customerData = validation.data
 
     // Check if customer already exists with this email
     const existingCustomer = await prisma.customer.findUnique({
@@ -124,10 +124,19 @@ export async function POST(request: NextRequest) {
 
     const customer = await prisma.customer.create({
       data: {
-        ...customerData,
+        firstName: customerData.firstName,
+        lastName: customerData.lastName,
+        email: customerData.email,
+        phone: customerData.phone,
+        address: customerData.address,
+        city: customerData.city,
+        state: customerData.state,
+        zipCode: customerData.zipCode,
+        notes: customerData.notes,
+        tags: customerData.tags,
         dateOfBirth: customerData.dateOfBirth 
           ? new Date(customerData.dateOfBirth)
-          : undefined,
+          : null,
       },
     })
 

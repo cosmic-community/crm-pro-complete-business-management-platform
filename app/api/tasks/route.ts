@@ -104,12 +104,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const taskData = validation.data!
+    const taskData = validation.data
 
     const task = await prisma.task.create({
       data: {
-        ...taskData,
-        dueDate: taskData.dueDate ? new Date(taskData.dueDate) : undefined,
+        title: taskData.title,
+        description: taskData.description,
+        priority: taskData.priority,
+        status: taskData.status,
+        assigneeId: taskData.assigneeId,
+        category: taskData.category,
+        dueDate: taskData.dueDate ? new Date(taskData.dueDate) : null,
       },
       include: {
         assignee: true,
