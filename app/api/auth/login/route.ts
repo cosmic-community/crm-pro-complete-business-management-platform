@@ -26,20 +26,26 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      // Find user by email in Cosmic CMS
-      const { objects: users } = await cosmic.objects
+      // Find user by email in Cosmic CMS with timeout and retry logic
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout')), 10000) // 10 second timeout
+      })
+
+      const cosmicPromise = cosmic.objects
         .find({ type: 'users', 'metadata.email': email.toLowerCase().trim() })
         .props(['id', 'title', 'slug', 'metadata'])
         .depth(1)
 
-      if (!users || users.length === 0) {
+      const result = await Promise.race([cosmicPromise, timeoutPromise]) as any
+
+      if (!result?.objects || result.objects.length === 0) {
         return NextResponse.json(
           { error: 'Invalid credentials' },
           { status: 401 }
         )
       }
 
-      const user = users[0]
+      const user = result.objects[0]
       
       // Check if user is active
       if (user.metadata?.is_active === false) {
@@ -76,10 +82,33 @@ export async function POST(request: NextRequest) {
       response.headers.set('Set-Cookie', setAuthCookie(token))
 
       return response
-    } catch (cosmicError) {
+    } catch (cosmicError: any) {
       console.error('Cosmic CMS error:', cosmicError)
+      
+      // Check if it's a timeout or connection error
+      if (cosmicError.message === 'Request timeout' || 
+          cosmicError.code === 'ECONNREFUSED' || 
+          cosmicError.code === 'ETIMEDOUT' ||
+          cosmicError.message?.includes('timeout') ||
+          cosmicError.message?.includes('network')) {
+        
+        return NextResponse.json(
+          { error: 'Authentication service is temporarily unavailable. Please try again in a few moments.' },
+          { status: 503 }
+        )
+      }
+
+      // For other errors, check if it's a 404 (no users found)
+      if (cosmicError.status === 404) {
+        return NextResponse.json(
+          { error: 'Invalid credentials' },
+          { status: 401 }
+        )
+      }
+
+      // For other Cosmic errors
       return NextResponse.json(
-        { error: 'Authentication service unavailable' },
+        { error: 'Authentication service error. Please contact support if this persists.' },
         { status: 503 }
       )
     }

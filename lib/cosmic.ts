@@ -9,12 +9,42 @@ if (!process.env.COSMIC_READ_KEY) {
   throw new Error('COSMIC_READ_KEY environment variable is required')
 }
 
-// Create the Cosmic client
+// Create the Cosmic client with retry configuration
 export const cosmic = createBucketClient({
   bucketSlug: process.env.COSMIC_BUCKET_SLUG,
   readKey: process.env.COSMIC_READ_KEY,
   writeKey: process.env.COSMIC_WRITE_KEY, // Optional for read-only operations
 })
+
+// Helper function to handle Cosmic API calls with retry logic
+async function withRetry<T>(operation: () => Promise<T>, maxRetries: number = 3): Promise<T> {
+  let lastError: any
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation()
+    } catch (error: any) {
+      lastError = error
+      console.warn(`Cosmic API attempt ${attempt} failed:`, error.message)
+      
+      // Don't retry on authentication errors or client errors (4xx)
+      if (error.status >= 400 && error.status < 500) {
+        throw error
+      }
+      
+      // If this was the last attempt, throw the error
+      if (attempt === maxRetries) {
+        break
+      }
+      
+      // Wait before retrying (exponential backoff)
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000)
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
+  }
+  
+  throw lastError
+}
 
 // TypeScript interfaces for Cosmic CRM data
 export interface CosmicContact {
@@ -206,223 +236,246 @@ export interface CosmicActivity {
   }
 }
 
-// Helper functions for Cosmic CMS operations
+// Helper functions for Cosmic CMS operations with retry logic
 export const cosmicOperations = {
   // Contacts
   async getContacts(params?: { limit?: number; skip?: number }) {
-    try {
-      const { objects } = await cosmic.objects
-        .find({ type: 'contacts' })
-        .props(['id', 'title', 'slug', 'metadata'])
-        .depth(1)
-        .limit(params?.limit || 50)
-        .skip(params?.skip || 0)
-      
-      return objects as CosmicContact[]
-    } catch (error: any) {
-      if (error.status === 404) {
-        return []
+    return withRetry(async () => {
+      try {
+        const { objects } = await cosmic.objects
+          .find({ type: 'contacts' })
+          .props(['id', 'title', 'slug', 'metadata'])
+          .depth(1)
+          .limit(params?.limit || 50)
+          .skip(params?.skip || 0)
+        
+        return objects as CosmicContact[]
+      } catch (error: any) {
+        if (error.status === 404) {
+          return []
+        }
+        throw error
       }
-      throw error
-    }
+    })
   },
 
   async getContact(slug: string) {
-    try {
-      const { object } = await cosmic.objects
-        .findOne({ type: 'contacts', slug })
-        .props(['id', 'title', 'slug', 'metadata'])
-        .depth(1)
-      
-      return object as CosmicContact
-    } catch (error: any) {
-      if (error.status === 404) {
-        return null
+    return withRetry(async () => {
+      try {
+        const { object } = await cosmic.objects
+          .findOne({ type: 'contacts', slug })
+          .props(['id', 'title', 'slug', 'metadata'])
+          .depth(1)
+        
+        return object as CosmicContact
+      } catch (error: any) {
+        if (error.status === 404) {
+          return null
+        }
+        throw error
       }
-      throw error
-    }
+    })
   },
 
   // Companies
   async getCompanies(params?: { limit?: number; skip?: number }) {
-    try {
-      const { objects } = await cosmic.objects
-        .find({ type: 'companies' })
-        .props(['id', 'title', 'slug', 'metadata'])
-        .depth(1)
-        .limit(params?.limit || 50)
-        .skip(params?.skip || 0)
-      
-      return objects as CosmicCompany[]
-    } catch (error: any) {
-      if (error.status === 404) {
-        return []
+    return withRetry(async () => {
+      try {
+        const { objects } = await cosmic.objects
+          .find({ type: 'companies' })
+          .props(['id', 'title', 'slug', 'metadata'])
+          .depth(1)
+          .limit(params?.limit || 50)
+          .skip(params?.skip || 0)
+        
+        return objects as CosmicCompany[]
+      } catch (error: any) {
+        if (error.status === 404) {
+          return []
+        }
+        throw error
       }
-      throw error
-    }
+    })
   },
 
   async getCompany(slug: string) {
-    try {
-      const { object } = await cosmic.objects
-        .findOne({ type: 'companies', slug })
-        .props(['id', 'title', 'slug', 'metadata'])
-        .depth(1)
-      
-      return object as CosmicCompany
-    } catch (error: any) {
-      if (error.status === 404) {
-        return null
+    return withRetry(async () => {
+      try {
+        const { object } = await cosmic.objects
+          .findOne({ type: 'companies', slug })
+          .props(['id', 'title', 'slug', 'metadata'])
+          .depth(1)
+        
+        return object as CosmicCompany
+      } catch (error: any) {
+        if (error.status === 404) {
+          return null
+        }
+        throw error
       }
-      throw error
-    }
+    })
   },
 
   // Deals
   async getDeals(params?: { limit?: number; skip?: number }) {
-    try {
-      const { objects } = await cosmic.objects
-        .find({ type: 'deals' })
-        .props(['id', 'title', 'slug', 'metadata'])
-        .depth(1)
-        .limit(params?.limit || 50)
-        .skip(params?.skip || 0)
-      
-      return objects as CosmicDeal[]
-    } catch (error: any) {
-      if (error.status === 404) {
-        return []
+    return withRetry(async () => {
+      try {
+        const { objects } = await cosmic.objects
+          .find({ type: 'deals' })
+          .props(['id', 'title', 'slug', 'metadata'])
+          .depth(1)
+          .limit(params?.limit || 50)
+          .skip(params?.skip || 0)
+        
+        return objects as CosmicDeal[]
+      } catch (error: any) {
+        if (error.status === 404) {
+          return []
+        }
+        throw error
       }
-      throw error
-    }
+    })
   },
 
   async getDeal(slug: string) {
-    try {
-      const { object } = await cosmic.objects
-        .findOne({ type: 'deals', slug })
-        .props(['id', 'title', 'slug', 'metadata'])
-        .depth(1)
-      
-      return object as CosmicDeal
-    } catch (error: any) {
-      if (error.status === 404) {
-        return null
+    return withRetry(async () => {
+      try {
+        const { object } = await cosmic.objects
+          .findOne({ type: 'deals', slug })
+          .props(['id', 'title', 'slug', 'metadata'])
+          .depth(1)
+        
+        return object as CosmicDeal
+      } catch (error: any) {
+        if (error.status === 404) {
+          return null
+        }
+        throw error
       }
-      throw error
-    }
+    })
   },
 
   // Tasks (from Cosmic CMS)
   async getCosmicTasks(params?: { limit?: number; skip?: number }) {
-    try {
-      const { objects } = await cosmic.objects
-        .find({ type: 'tasks' })
-        .props(['id', 'title', 'slug', 'metadata'])
-        .depth(1)
-        .limit(params?.limit || 50)
-        .skip(params?.skip || 0)
-      
-      return objects as CosmicTask[]
-    } catch (error: any) {
-      if (error.status === 404) {
-        return []
+    return withRetry(async () => {
+      try {
+        const { objects } = await cosmic.objects
+          .find({ type: 'tasks' })
+          .props(['id', 'title', 'slug', 'metadata'])
+          .depth(1)
+          .limit(params?.limit || 50)
+          .skip(params?.skip || 0)
+        
+        return objects as CosmicTask[]
+      } catch (error: any) {
+        if (error.status === 404) {
+          return []
+        }
+        throw error
       }
-      throw error
-    }
+    })
   },
 
   async getCosmicTask(slug: string) {
-    try {
-      const { object } = await cosmic.objects
-        .findOne({ type: 'tasks', slug })
-        .props(['id', 'title', 'slug', 'metadata'])
-        .depth(1)
-      
-      return object as CosmicTask
-    } catch (error: any) {
-      if (error.status === 404) {
-        return null
+    return withRetry(async () => {
+      try {
+        const { object } = await cosmic.objects
+          .findOne({ type: 'tasks', slug })
+          .props(['id', 'title', 'slug', 'metadata'])
+          .depth(1)
+        
+        return object as CosmicTask
+      } catch (error: any) {
+        if (error.status === 404) {
+          return null
+        }
+        throw error
       }
-      throw error
-    }
+    })
   },
 
   // Users (from Cosmic CMS)
   async getCosmicUsers(params?: { limit?: number; skip?: number }) {
-    try {
-      const { objects } = await cosmic.objects
-        .find({ type: 'users' })
-        .props(['id', 'title', 'slug', 'metadata'])
-        .limit(params?.limit || 50)
-        .skip(params?.skip || 0)
-      
-      return objects as CosmicUser[]
-    } catch (error: any) {
-      if (error.status === 404) {
-        return []
+    return withRetry(async () => {
+      try {
+        const { objects } = await cosmic.objects
+          .find({ type: 'users' })
+          .props(['id', 'title', 'slug', 'metadata'])
+          .limit(params?.limit || 50)
+          .skip(params?.skip || 0)
+        
+        return objects as CosmicUser[]
+      } catch (error: any) {
+        if (error.status === 404) {
+          return []
+        }
+        throw error
       }
-      throw error
-    }
+    })
   },
 
   async getCosmicUser(slug: string) {
-    try {
-      const { object } = await cosmic.objects
-        .findOne({ type: 'users', slug })
-        .props(['id', 'title', 'slug', 'metadata'])
-      
-      return object as CosmicUser
-    } catch (error: any) {
-      if (error.status === 404) {
-        return null
+    return withRetry(async () => {
+      try {
+        const { object } = await cosmic.objects
+          .findOne({ type: 'users', slug })
+          .props(['id', 'title', 'slug', 'metadata'])
+        
+        return object as CosmicUser
+      } catch (error: any) {
+        if (error.status === 404) {
+          return null
+        }
+        throw error
       }
-      throw error
-    }
+    })
   },
 
   // Activities
   async getActivities(params?: { limit?: number; skip?: number }) {
-    try {
-      const { objects } = await cosmic.objects
-        .find({ type: 'activities' })
-        .props(['id', 'title', 'slug', 'metadata'])
-        .depth(1)
-        .limit(params?.limit || 50)
-        .skip(params?.skip || 0)
-      
-      return objects as CosmicActivity[]
-    } catch (error: any) {
-      if (error.status === 404) {
-        return []
+    return withRetry(async () => {
+      try {
+        const { objects } = await cosmic.objects
+          .find({ type: 'activities' })
+          .props(['id', 'title', 'slug', 'metadata'])
+          .depth(1)
+          .limit(params?.limit || 50)
+          .skip(params?.skip || 0)
+        
+        return objects as CosmicActivity[]
+      } catch (error: any) {
+        if (error.status === 404) {
+          return []
+        }
+        throw error
       }
-      throw error
-    }
+    })
   },
 
   async getActivity(slug: string) {
-    try {
-      const { object } = await cosmic.objects
-        .findOne({ type: 'activities', slug })
-        .props(['id', 'title', 'slug', 'metadata'])
-        .depth(1)
-      
-      return object as CosmicActivity
-    } catch (error: any) {
-      if (error.status === 404) {
-        return null
+    return withRetry(async () => {
+      try {
+        const { object } = await cosmic.objects
+          .findOne({ type: 'activities', slug })
+          .props(['id', 'title', 'slug', 'metadata'])
+          .depth(1)
+        
+        return object as CosmicActivity
+      } catch (error: any) {
+        if (error.status === 404) {
+          return null
+        }
+        throw error
       }
-      throw error
-    }
+    })
   },
 
-  // General search across all types - removed .search() as it's not available in current SDK
+  // General search across all types - improved error handling
   async searchContent(query: string, types: string[] = ['contacts', 'companies', 'deals']) {
     const results: any[] = []
     
-    // Instead of using .search(), we'll use basic filtering
-    // This is a workaround until the search method is available in the SDK
-    for (const type of types) {
+    // Use Promise.allSettled to handle partial failures gracefully
+    const searchPromises = types.map(async (type) => {
       try {
         const { objects } = await cosmic.objects
           .find({ type })
@@ -435,12 +488,20 @@ export const cosmicOperations = {
           JSON.stringify(obj.metadata).toLowerCase().includes(query.toLowerCase())
         )
         
-        results.push(...filtered)
+        return filtered
       } catch (error) {
-        // Continue searching other types even if one fails
         console.warn(`Search failed for type ${type}:`, error)
+        return []
       }
-    }
+    })
+
+    const searchResults = await Promise.allSettled(searchPromises)
+    
+    searchResults.forEach((result) => {
+      if (result.status === 'fulfilled') {
+        results.push(...result.value)
+      }
+    })
     
     return results
   }
