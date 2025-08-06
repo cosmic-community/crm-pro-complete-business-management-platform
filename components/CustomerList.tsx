@@ -106,7 +106,7 @@ export default function CustomerList() {
                 </td>
                 <td>
                   <div className="flex flex-wrap gap-1">
-                    {customer.tags.map((tag, index) => (
+                    {customer.tags.map((tag: string, index: number) => (
                       <span key={index} className="badge-info">
                         {tag}
                       </span>

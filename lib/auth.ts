@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken'
+import bcrypt from 'bcryptjs'
 import { cookies } from 'next/headers'
-import type { JWTPayload, AuthUser } from '@/types'
+import type { AuthUser } from '@/types'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-for-development-only-change-in-production'
 
@@ -8,7 +9,7 @@ if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
   throw new Error('JWT_SECRET environment variable is required in production')
 }
 
-export interface JWTPayload {
+export interface AuthJWTPayload {
   userId: string
   email: string
   firstName: string
@@ -18,7 +19,16 @@ export interface JWTPayload {
   exp?: number
 }
 
-export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
+export async function hashPassword(password: string): Promise<string> {
+  const saltRounds = 12
+  return bcrypt.hash(password, saltRounds)
+}
+
+export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+  return bcrypt.compare(password, hashedPassword)
+}
+
+export function generateToken(payload: Omit<AuthJWTPayload, 'iat' | 'exp'>): string {
   try {
     return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' })
   } catch (error) {
@@ -27,9 +37,9 @@ export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string 
   }
 }
 
-export function verifyToken(token: string): JWTPayload | null {
+export function verifyToken(token: string): AuthJWTPayload | null {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload
+    const decoded = jwt.verify(token, JWT_SECRET) as AuthJWTPayload
     return decoded
   } catch (error) {
     console.error('Token verification failed:', error)

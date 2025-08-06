@@ -17,6 +17,57 @@ export interface JWTPayload {
   exp?: number
 }
 
+// Application Types
+export type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'COMPLETED'
+
+export interface Task {
+  id: string
+  title: string
+  description?: string
+  status: TaskStatus
+  priority: 'URGENT' | 'HIGH' | 'MEDIUM' | 'LOW'
+  dueDate?: string
+  createdAt: string
+  updatedAt: string
+  assignee?: {
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+  }
+}
+
+export interface Customer {
+  id: string
+  firstName: string
+  lastName: string
+  email: string
+  phone?: string
+  city?: string
+  state?: string
+  tags: string[]
+  createdAt: string
+  updatedAt: string
+  isActive: boolean
+}
+
+export interface Appointment {
+  id: string
+  title: string
+  description?: string
+  startTime: string
+  endTime: string
+  status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED'
+  customer: {
+    id: string
+    firstName: string
+    lastName: string
+    email: string
+  }
+  createdAt: string
+  updatedAt: string
+}
+
 // Cosmic CMS Types
 export interface CosmicObject {
   id: string

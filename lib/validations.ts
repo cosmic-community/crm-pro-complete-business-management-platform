@@ -28,6 +28,21 @@ export const contactSchema = z.object({
   tags: z.string().optional(),
 })
 
+// Customer validation schema
+export const customerSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  state: z.string().optional(),
+  zipCode: z.string().optional(),
+  notes: z.string().optional(),
+  tags: z.array(z.string()).default([]),
+})
+
 // Company validation schema
 export const companySchema = z.object({
   company_name: z.string().min(1, 'Company name is required'),
@@ -62,15 +77,12 @@ export const dealSchema = z.object({
 
 // Task validation schema
 export const taskSchema = z.object({
-  task_title: z.string().min(1, 'Task title is required'),
+  title: z.string().min(1, 'Task title is required'),
   description: z.string().optional(),
-  priority: z.enum(['high', 'medium', 'low']),
-  status: z.enum(['open', 'in_progress', 'completed', 'cancelled']),
-  assigned_to: z.string().optional(),
-  related_contact: z.string().optional(),
-  related_company: z.string().optional(),
-  related_deal: z.string().optional(),
-  due_date: z.string().optional(),
+  priority: z.enum(['URGENT', 'HIGH', 'MEDIUM', 'LOW']),
+  status: z.enum(['TODO', 'IN_PROGRESS', 'COMPLETED']),
+  assigneeId: z.string().optional(),
+  dueDate: z.string().optional(),
   category: z.string().optional(),
 })
 
@@ -90,10 +102,33 @@ export const activitySchema = z.object({
   next_follow_up_date: z.string().optional(),
 })
 
+// Appointment validation schema
+export const appointmentSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().optional(),
+  startTime: z.string().min(1, 'Start time is required'),
+  endTime: z.string().min(1, 'End time is required'),
+  customerId: z.string().min(1, 'Customer ID is required'),
+})
+
+// Validation helper function
+export function validateInput<T>(schema: z.ZodSchema<T>, data: unknown): { success: true; data: T } | { success: false; errors: string[] } {
+  const result = schema.safeParse(data)
+  
+  if (result.success) {
+    return { success: true, data: result.data }
+  }
+  
+  const errors = result.error.errors.map(err => err.message)
+  return { success: false, errors }
+}
+
 export type LoginFormData = z.infer<typeof loginSchema>
 export type RegisterFormData = z.infer<typeof registerSchema>
 export type ContactFormData = z.infer<typeof contactSchema>
+export type CustomerFormData = z.infer<typeof customerSchema>
 export type CompanyFormData = z.infer<typeof companySchema>
 export type DealFormData = z.infer<typeof dealSchema>
 export type TaskFormData = z.infer<typeof taskSchema>
 export type ActivityFormData = z.infer<typeof activitySchema>
+export type AppointmentFormData = z.infer<typeof appointmentSchema>
