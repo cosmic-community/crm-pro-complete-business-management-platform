@@ -1,177 +1,320 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DragDropContext, Droppable, Draggable, DroppableProvided, DraggableProvided, DropResult, DroppableStateSnapshot, DraggableStateSnapshot } from '@hello-pangea/dnd'
-import { Plus, User, Calendar, AlertTriangle } from 'lucide-react'
-import { format } from 'date-fns'
-import toast from 'react-hot-toast'
-import type { Task, TaskStatus } from '@/types'
+import { 
+  DndContext, 
+  closestCorners,
+  DragEndEvent,
+  DragOverEvent,
+  DragStartEvent,
+  DragOverlay,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  KeyboardSensor
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy
+} from '@dnd-kit/sortable'
+import {
+  useSortable
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { Plus, Calendar, User, AlertCircle, CheckCircle } from 'lucide-react'
+import { Task, User as UserType } from '@/types'
 
-const columns = [
-  { id: 'TODO', title: 'To Do', color: 'bg-gray-100' },
-  { id: 'IN_PROGRESS', title: 'In Progress', color: 'bg-blue-100' },
-  { id: 'COMPLETED', title: 'Completed', color: 'bg-green-100' },
-]
+interface TaskBoardProps {
+  tasks: Task[]
+  users: UserType[]
+  onUpdateTask: (taskId: string, updates: Partial<Task>) => void
+  onCreateTask: (task: Omit<Task, 'id'>) => void
+}
 
-export default function TaskBoard() {
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+interface TaskCardProps {
+  task: Task
+  users: UserType[]
+  onUpdate: (updates: Partial<Task>) => void
+}
 
-  useEffect(() => {
-    fetchTasks()
-  }, [])
+function TaskCard({ task, users, onUpdate }: TaskCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: task.id })
 
-  const fetchTasks = async () => {
-    try {
-      const response = await fetch('/api/tasks')
-      if (response.ok) {
-        const result = await response.json()
-        setTasks(result.data)
-      }
-    } catch (error) {
-      console.error('Error fetching tasks:', error)
-    } finally {
-      setIsLoading(false)
-    }
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1
   }
 
-  const handleDragEnd = async (result: DropResult) => {
-    if (!result.destination) return
-
-    const { source, destination, draggableId } = result
-    
-    if (source.droppableId === destination.droppableId) return
-
-    const newStatus = destination.droppableId as TaskStatus
-    
-    try {
-      const response = await fetch(`/api/tasks/${draggableId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: newStatus }),
-      })
-
-      if (response.ok) {
-        setTasks(tasks.map(task => 
-          task.id === draggableId 
-            ? { ...task, status: newStatus }
-            : task
-        ))
-        toast.success('Task status updated')
-      } else {
-        toast.error('Error updating task')
-      }
-    } catch (error) {
-      toast.error('Network error occurred')
-    }
-  }
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'URGENT':
-        return 'text-red-600 bg-red-100'
-      case 'HIGH':
-        return 'text-orange-600 bg-orange-100'
-      case 'MEDIUM':
-        return 'text-yellow-600 bg-yellow-100'
-      case 'LOW':
-        return 'text-green-600 bg-green-100'
-      default:
-        return 'text-gray-600 bg-gray-100'
-    }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="spinner"></div>
-      </div>
-    )
-  }
+  const assignedUser = users.find(user => user.id === task.metadata?.assigned_to?.id)
+  const priorityColor = {
+    High: 'text-red-600 bg-red-50',
+    Medium: 'text-yellow-600 bg-yellow-50',
+    Low: 'text-green-600 bg-green-50'
+  }[task.metadata?.priority?.value || 'Medium']
 
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {columns.map((column) => {
-          const columnTasks = tasks.filter(task => task.status === column.id)
-          
-          return (
-            <div key={column.id} className="card">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-medium text-gray-900">{column.title}</h3>
-                <span className="badge-info">{columnTasks.length}</span>
-              </div>
-              
-              <Droppable droppableId={column.id}>
-                {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={`space-y-3 min-h-64 p-2 rounded-lg ${
-                      snapshot.isDraggingOver ? column.color : ''
-                    }`}
-                  >
-                    {columnTasks.map((task, index) => (
-                      <Draggable key={task.id} draggableId={task.id} index={index}>
-                        {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className={`bg-white p-4 rounded-lg border shadow-sm ${
-                              snapshot.isDragging ? 'shadow-lg' : ''
-                            }`}
-                          >
-                            <div className="flex items-start justify-between mb-2">
-                              <h4 className="font-medium text-gray-900 text-sm">{task.title}</h4>
-                              <span className={`badge ${getPriorityColor(task.priority)}`}>
-                                {task.priority.toLowerCase()}
-                              </span>
-                            </div>
-                            
-                            {task.description && (
-                              <p className="text-xs text-gray-600 mb-3 line-clamp-2">
-                                {task.description}
-                              </p>
-                            )}
-                            
-                            <div className="flex items-center justify-between text-xs text-gray-500">
-                              {task.assignee && (
-                                <div className="flex items-center">
-                                  <User className="h-3 w-3 mr-1" />
-                                  {task.assignee.firstName} {task.assignee.lastName}
-                                </div>
-                              )}
-                              
-                              {task.dueDate && (
-                                <div className="flex items-center">
-                                  <Calendar className="h-3 w-3 mr-1" />
-                                  {format(new Date(task.dueDate), 'MMM d')}
-                                  {new Date(task.dueDate) < new Date() && task.status !== 'COMPLETED' && (
-                                    <AlertTriangle className="h-3 w-3 ml-1 text-red-500" />
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                    
-                    <button className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-gray-400 hover:text-gray-600 flex items-center justify-center">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add task
-                    </button>
-                  </div>
-                )}
-              </Droppable>
-            </div>
-          )
-        })}
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="bg-white rounded-lg border p-4 shadow-sm hover:shadow-md transition-shadow cursor-move"
+    >
+      <div className="flex justify-between items-start mb-3">
+        <h4 className="font-medium text-gray-900 text-sm line-clamp-2">{task.title}</h4>
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColor}`}>
+          {task.metadata?.priority?.value || 'Medium'}
+        </span>
       </div>
-    </DragDropContext>
+      
+      {task.metadata?.description && (
+        <div 
+          className="text-sm text-gray-600 mb-3 line-clamp-2"
+          dangerouslySetInnerHTML={{ __html: task.metadata.description }}
+        />
+      )}
+
+      <div className="space-y-2">
+        {task.metadata?.due_date && (
+          <div className="flex items-center text-sm text-gray-500">
+            <Calendar className="h-4 w-4 mr-2" />
+            {new Date(task.metadata.due_date).toLocaleDateString()}
+          </div>
+        )}
+        
+        {assignedUser && (
+          <div className="flex items-center text-sm text-gray-500">
+            <User className="h-4 w-4 mr-2" />
+            {assignedUser.metadata?.first_name} {assignedUser.metadata?.last_name}
+          </div>
+        )}
+
+        {task.metadata?.category && (
+          <div className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-50 text-blue-600">
+            {task.metadata.category.value}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+interface ColumnProps {
+  id: string
+  title: string
+  tasks: Task[]
+  users: UserType[]
+  onUpdateTask: (taskId: string, updates: Partial<Task>) => void
+  icon: React.ReactNode
+  color: string
+}
+
+function Column({ id, title, tasks, users, onUpdateTask, icon, color }: ColumnProps) {
+  const taskIds = tasks.map(task => task.id)
+
+  return (
+    <div className="bg-gray-50 rounded-lg p-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          <div className={`p-2 rounded-lg ${color} mr-3`}>
+            {icon}
+          </div>
+          <div>
+            <h3 className="font-medium text-gray-900">{title}</h3>
+            <p className="text-sm text-gray-500">{tasks.length} tasks</p>
+          </div>
+        </div>
+      </div>
+      
+      <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+        <div className="space-y-3 min-h-[200px]">
+          {tasks.map(task => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              users={users}
+              onUpdate={(updates) => onUpdateTask(task.id, updates)}
+            />
+          ))}
+        </div>
+      </SortableContext>
+    </div>
+  )
+}
+
+export default function TaskBoard({ tasks, users, onUpdateTask, onCreateTask }: TaskBoardProps) {
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const [boardTasks, setBoardTasks] = useState(tasks)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  useEffect(() => {
+    setBoardTasks(tasks)
+  }, [tasks])
+
+  const columns = [
+    {
+      id: 'open',
+      title: 'To Do',
+      icon: <AlertCircle className="h-5 w-5 text-orange-600" />,
+      color: 'bg-orange-100'
+    },
+    {
+      id: 'in_progress',
+      title: 'In Progress',
+      icon: <User className="h-5 w-5 text-blue-600" />,
+      color: 'bg-blue-100'
+    },
+    {
+      id: 'completed',
+      title: 'Completed',
+      icon: <CheckCircle className="h-5 w-5 text-green-600" />,
+      color: 'bg-green-100'
+    }
+  ]
+
+  const getTasksByStatus = (status: string) => {
+    return boardTasks.filter(task => task.metadata?.status?.key === status)
+  }
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string)
+  }
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    
+    if (!over) return
+
+    const activeTask = boardTasks.find(task => task.id === active.id)
+    if (!activeTask) return
+
+    // Find which column the task was dropped into
+    const overContainer = over.data?.current?.sortable?.containerId || over.id
+    const newStatus = overContainer as string
+
+    if (activeTask.metadata?.status?.key !== newStatus) {
+      const statusMap: Record<string, { key: string; value: string }> = {
+        'open': { key: 'open', value: 'Open' },
+        'in_progress': { key: 'in_progress', value: 'In Progress' },
+        'completed': { key: 'completed', value: 'Completed' }
+      }
+
+      onUpdateTask(activeTask.id, {
+        metadata: {
+          ...activeTask.metadata,
+          status: statusMap[newStatus]
+        }
+      })
+    }
+
+    setActiveId(null)
+  }
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event
+    
+    if (!over) return
+
+    const activeTask = boardTasks.find(task => task.id === active.id)
+    if (!activeTask) return
+
+    const overContainer = over.data?.current?.sortable?.containerId || over.id
+    const activeContainer = activeTask.metadata?.status?.key
+
+    if (activeContainer !== overContainer) {
+      setBoardTasks(prevTasks => {
+        const activeIndex = prevTasks.findIndex(task => task.id === active.id)
+        const overIndex = prevTasks.findIndex(task => task.id === over.id)
+        
+        if (activeIndex !== -1) {
+          const updatedTasks = [...prevTasks]
+          const statusMap: Record<string, { key: string; value: string }> = {
+            'open': { key: 'open', value: 'Open' },
+            'in_progress': { key: 'in_progress', value: 'In Progress' },
+            'completed': { key: 'completed', value: 'Completed' }
+          }
+
+          updatedTasks[activeIndex] = {
+            ...updatedTasks[activeIndex],
+            metadata: {
+              ...updatedTasks[activeIndex].metadata,
+              status: statusMap[overContainer as string]
+            }
+          }
+
+          return updatedTasks
+        }
+
+        return prevTasks
+      })
+    }
+  }
+
+  const activeTask = activeId ? boardTasks.find(task => task.id === activeId) : null
+
+  return (
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Task Board</h2>
+        <button
+          onClick={() => {/* Handle create task */}}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center"
+        >
+          <Plus className="h-5 w-5 mr-2" />
+          Add Task
+        </button>
+      </div>
+
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {columns.map(column => (
+            <Column
+              key={column.id}
+              id={column.id}
+              title={column.title}
+              tasks={getTasksByStatus(column.id)}
+              users={users}
+              onUpdateTask={onUpdateTask}
+              icon={column.icon}
+              color={column.color}
+            />
+          ))}
+        </div>
+
+        <DragOverlay>
+          {activeTask ? (
+            <div className="bg-white rounded-lg border p-4 shadow-lg opacity-90 rotate-3">
+              <h4 className="font-medium text-gray-900 text-sm">{activeTask.title}</h4>
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+    </div>
   )
 }
