@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     console.log('Login attempt for email:', body.email)
     
+    // Validate input
     const validation = loginSchema.safeParse(body)
     if (!validation.success) {
       console.error('Validation failed:', validation.error.flatten())
@@ -20,6 +21,17 @@ export async function POST(request: NextRequest) {
     }
 
     const { email, password } = validation.data
+
+    // Test database connection
+    try {
+      await prisma.$queryRaw`SELECT 1`
+    } catch (dbError) {
+      console.error('Database connection failed:', dbError)
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 500 }
+      )
+    }
 
     // Find user by email
     const user = await prisma.user.findUnique({
@@ -75,8 +87,15 @@ export async function POST(request: NextRequest) {
     return response
   } catch (error) {
     console.error('Login error:', error)
+    
+    // More specific error handling
+    if (error instanceof Error) {
+      console.error('Error message:', error.message)
+      console.error('Error stack:', error.stack)
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: process.env.NODE_ENV === 'development' ? String(error) : undefined },
       { status: 500 }
     )
   }

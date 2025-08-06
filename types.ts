@@ -1,13 +1,11 @@
-import { UserRole as PrismaUserRole } from '@prisma/client'
-
-export interface User {
-  id: string
+export interface JWTPayload {
+  userId: string
   email: string
-  firstName: string
-  lastName: string
-  role: PrismaUserRole
-  createdAt: Date
-  updatedAt: Date
+  firstName?: string
+  lastName?: string
+  role: string
+  iat: number
+  exp: number
 }
 
 export interface AuthUser {
@@ -15,21 +13,21 @@ export interface AuthUser {
   email: string
   firstName: string
   lastName: string
-  role: PrismaUserRole
+  role: string
 }
 
-export interface JWTPayload {
-  userId: string
+export type UserRole = 'ADMIN' | 'MANAGER' | 'STAFF'
+
+export interface User {
+  id: string
   email: string
   firstName: string
   lastName: string
-  role: PrismaUserRole
-  iat: number
-  exp: number
+  role: UserRole
+  isActive: boolean
+  createdAt: Date
+  updatedAt: Date
 }
-
-// Use the Prisma-generated UserRole enum directly
-export type UserRole = PrismaUserRole
 
 export interface Customer {
   id: string
@@ -41,8 +39,11 @@ export interface Customer {
   city?: string
   state?: string
   zipCode?: string
+  country: string
+  dateOfBirth?: Date
   notes?: string
   tags: string[]
+  isActive: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -53,141 +54,28 @@ export interface Appointment {
   description?: string
   startTime: Date
   endTime: Date
-  status: AppointmentStatus
-  customer: Customer
-  employee: User
-  service?: Service
-  location?: Location
+  status: 'SCHEDULED' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW'
+  notes?: string
+  customerId: string
+  employeeId: string
+  serviceId?: string
+  locationId?: string
   createdAt: Date
   updatedAt: Date
+  customer?: Customer
+  employee?: User
 }
 
 export interface Task {
   id: string
   title: string
   description?: string
-  status: TaskStatus
-  priority: Priority
+  status: 'TODO' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'
   dueDate?: Date
   completedAt?: Date
-  assignee: User
+  assigneeId?: string
+  assignee?: User
   createdAt: Date
   updatedAt: Date
-}
-
-export interface Service {
-  id: string
-  name: string
-  description?: string
-  duration: number
-  price: number
-  category?: ServiceCategory
-  location?: Location
-  createdAt: Date
-  updatedAt: Date
-}
-
-export interface ServiceCategory {
-  id: string
-  name: string
-  description?: string
-  createdAt: Date
-  updatedAt: Date
-}
-
-export interface Product {
-  id: string
-  name: string
-  description?: string
-  sku: string
-  price: number
-  cost: number
-  stockQty: number
-  category?: ProductCategory
-  createdAt: Date
-  updatedAt: Date
-}
-
-export interface ProductCategory {
-  id: string
-  name: string
-  description?: string
-  createdAt: Date
-  updatedAt: Date
-}
-
-export interface Location {
-  id: string
-  name: string
-  address: string
-  city: string
-  state: string
-  zipCode: string
-  phone?: string
-  email?: string
-  createdAt: Date
-  updatedAt: Date
-}
-
-export interface CompanySettings {
-  id: string
-  companyName: string
-  email: string
-  phone?: string
-  address?: string
-  timezone: string
-  currency: string
-  createdAt: Date
-  updatedAt: Date
-}
-
-export enum AppointmentStatus {
-  SCHEDULED = 'SCHEDULED',
-  CONFIRMED = 'CONFIRMED',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED',
-  NO_SHOW = 'NO_SHOW'
-}
-
-export enum TaskStatus {
-  TODO = 'TODO',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED'
-}
-
-export enum Priority {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
-  URGENT = 'URGENT'
-}
-
-export interface DashboardStats {
-  totalCustomers: number
-  totalAppointments: number
-  totalRevenue: number
-  completedTasks: number
-  upcomingAppointments: number
-  pendingTasks: number
-}
-
-export interface RevenueData {
-  month: string
-  revenue: number
-}
-
-export interface CustomerFilters {
-  search: string
-  city: string
-  state: string
-  tags: string[]
-}
-
-export interface TaskFilters {
-  status: TaskStatus[]
-  priority: Priority[]
-  assigneeId: string
-  search: string
 }
