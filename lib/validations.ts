@@ -11,7 +11,7 @@ export const registerSchema = z.object({
   lastName: z.string().min(1, 'Last name is required'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  role: z.enum(['admin', 'sales_manager', 'sales_rep', 'marketing']),
+  role: z.enum(['admin', 'sales_manager', 'sales_rep', 'marketing']).default('sales_rep'),
 })
 
 // Contact validation schema
@@ -77,13 +77,16 @@ export const dealSchema = z.object({
 
 // Task validation schema
 export const taskSchema = z.object({
-  title: z.string().min(1, 'Task title is required'),
+  task_title: z.string().min(1, 'Task title is required'),
   description: z.string().optional(),
-  priority: z.enum(['URGENT', 'HIGH', 'MEDIUM', 'LOW']),
-  status: z.enum(['TODO', 'IN_PROGRESS', 'COMPLETED']),
-  assigneeId: z.string().optional(),
-  dueDate: z.string().optional(),
-  category: z.string().optional(),
+  priority: z.enum(['high', 'medium', 'low']),
+  status: z.enum(['open', 'in_progress', 'completed', 'cancelled']),
+  assigned_to: z.string().optional(),
+  related_contact: z.string().optional(),
+  related_company: z.string().optional(),
+  related_deal: z.string().optional(),
+  due_date: z.string().optional(),
+  category: z.enum(['follow_up', 'demo', 'proposal', 'contract']).optional(),
 })
 
 // Activity validation schema
