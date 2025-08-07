@@ -44,7 +44,9 @@ export default function NewCustomerModal() {
         body: JSON.stringify(formData),
       })
 
-      if (response.ok) {
+      const result = await response.json()
+
+      if (response.ok && result.success) {
         toast.success('Customer added successfully!')
         setIsOpen(false)
         setFormData({
@@ -61,11 +63,11 @@ export default function NewCustomerModal() {
         // Refresh the page to show the new customer
         window.location.reload()
       } else {
-        const error = await response.json()
-        toast.error(error.message || 'Error adding customer')
+        toast.error(result.error || 'Error adding customer')
       }
     } catch (error) {
-      toast.error('Network error occurred')
+      console.error('Network error:', error)
+      toast.error('Network error occurred. Please check your connection.')
     } finally {
       setIsSubmitting(false)
     }
