@@ -10,7 +10,7 @@ export function middleware(request: NextRequest) {
   const isPublicPath = publicPaths.some(path => request.nextUrl.pathname === path)
 
   // API routes that don't require authentication
-  const publicApiPaths = ['/api/auth/login', '/api/auth/register']
+  const publicApiPaths = ['/api/auth/login', '/api/auth/register', '/api/demo']
   const isPublicApiPath = publicApiPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
   // If accessing a protected route without a token, redirect to login
