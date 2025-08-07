@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       .skip(skip)
 
     return NextResponse.json({ locations: objects || [] })
-  } catch (error) {
+  } catch (error: any) {
     if (error.status === 404) {
       return NextResponse.json({ locations: [] })
     }
