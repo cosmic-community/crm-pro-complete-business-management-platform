@@ -212,7 +212,7 @@ export default function SettingsList() {
     return setting.metadata.category.key === filter
   })
 
-  const categories = [...new Set(settings.map(setting => setting.metadata.category.key))]
+  const categories = Array.from(new Set(settings.map(setting => setting.metadata.category.key)))
 
   if (loading) return <Loading />
 

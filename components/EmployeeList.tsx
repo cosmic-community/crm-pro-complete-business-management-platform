@@ -98,7 +98,7 @@ export default function EmployeeList() {
     return employee.metadata.department.key === filter
   })
 
-  const departments = [...new Set(employees.map(emp => emp.metadata.department.key))]
+  const departments = Array.from(new Set(employees.map(emp => emp.metadata.department.key)))
 
   if (loading) return <Loading />
 

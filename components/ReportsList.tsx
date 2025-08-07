@@ -119,7 +119,7 @@ export default function ReportsList() {
     return report.metadata.report_type.key === filter
   })
 
-  const reportTypes = [...new Set(reports.map(report => report.metadata.report_type.key))]
+  const reportTypes = Array.from(new Set(reports.map(report => report.metadata.report_type.key)))
 
   if (loading) return <Loading />
 

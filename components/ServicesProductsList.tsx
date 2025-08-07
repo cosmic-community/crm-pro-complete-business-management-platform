@@ -93,8 +93,8 @@ export default function ServicesProductsList() {
     return categoryMatch && typeMatch
   })
 
-  const categories = [...new Set(servicesProducts.map(item => item.metadata.category?.key).filter(Boolean))]
-  const types = [...new Set(servicesProducts.map(item => item.metadata.type.key))]
+  const categories = Array.from(new Set(servicesProducts.map(item => item.metadata.category?.key).filter(Boolean)))
+  const types = Array.from(new Set(servicesProducts.map(item => item.metadata.type.key)))
 
   if (loading) return <Loading />
 

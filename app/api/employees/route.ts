@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
       .skip(skip)
 
     return NextResponse.json({ employees: objects || [] })
-  } catch (error) {
-    if (error.status === 404) {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
       return NextResponse.json({ employees: [] })
     }
     console.error('Error fetching employees:', error)
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     const { object } = await cosmic.objects.insertOne(employeeData)
     return NextResponse.json({ employee: object })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error creating employee:', error)
     return NextResponse.json({ error: 'Failed to create employee' }, { status: 500 })
   }

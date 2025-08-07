@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
       .skip(skip)
 
     return NextResponse.json({ settings: objects || [] })
-  } catch (error) {
-    if (error.status === 404) {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
       return NextResponse.json({ settings: [] })
     }
     console.error('Error fetching settings:', error)
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     const { object } = await cosmic.objects.insertOne(settingData)
     return NextResponse.json({ setting: object })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error creating setting:', error)
     return NextResponse.json({ error: 'Failed to create setting' }, { status: 500 })
   }

@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
       .skip(skip)
 
     return NextResponse.json({ reports: objects || [] })
-  } catch (error) {
-    if (error.status === 404) {
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'status' in error && error.status === 404) {
       return NextResponse.json({ reports: [] })
     }
     console.error('Error fetching reports:', error)
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     const { object } = await cosmic.objects.insertOne(reportData)
     return NextResponse.json({ report: object })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error creating report:', error)
     return NextResponse.json({ error: 'Failed to create report' }, { status: 500 })
   }
