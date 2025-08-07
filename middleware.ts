@@ -4,6 +4,7 @@ import { verifyToken } from '@/lib/auth'
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('auth-token')?.value
+  const isDemoMode = request.nextUrl.searchParams.get('demo') === 'true'
 
   // Public paths that don't require authentication
   const publicPaths = ['/login', '/register', '/']
@@ -13,8 +14,24 @@ export function middleware(request: NextRequest) {
   const publicApiPaths = ['/api/auth/login', '/api/auth/register', '/api/demo']
   const isPublicApiPath = publicApiPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
-  // If accessing a protected route without a token, redirect to login
-  if (!token && !isPublicPath && !isPublicApiPath) {
+  // Allow demo mode access to dashboard and other protected routes
+  if (isDemoMode && request.nextUrl.pathname.startsWith('/dashboard')) {
+    const response = NextResponse.next()
+    // Set a demo session cookie that lasts for the browser session
+    response.cookies.set('demo-mode', 'true', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24 // 24 hours
+    })
+    return response
+  }
+
+  // Check if user is in demo mode
+  const isDemoModeActive = request.cookies.get('demo-mode')?.value === 'true'
+
+  // If accessing a protected route without a token and not in demo mode, redirect to login
+  if (!token && !isPublicPath && !isPublicApiPath && !isDemoModeActive) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
@@ -22,8 +39,8 @@ export function middleware(request: NextRequest) {
   if (token) {
     const payload = verifyToken(token)
     
-    // If token is invalid and accessing protected route, redirect to login
-    if (!payload && !isPublicPath && !isPublicApiPath) {
+    // If token is invalid and accessing protected route and not in demo mode, redirect to login
+    if (!payload && !isPublicPath && !isPublicApiPath && !isDemoModeActive) {
       const response = NextResponse.redirect(new URL('/login', request.url))
       response.cookies.delete('auth-token')
       return response

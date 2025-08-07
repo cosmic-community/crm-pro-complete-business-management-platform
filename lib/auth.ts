@@ -51,23 +51,39 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
   try {
     const cookieStore = await cookies()
     const token = cookieStore.get('auth-token')?.value
+    const isDemoMode = cookieStore.get('demo-mode')?.value === 'true'
 
-    if (!token) {
+    if (!token && !isDemoMode) {
       return null
     }
 
-    const payload = verifyToken(token)
-    if (!payload) {
-      return null
+    // If in demo mode, return a demo user
+    if (isDemoMode && !token) {
+      return {
+        id: 'demo-user',
+        email: 'demo@example.com',
+        firstName: 'Demo',
+        lastName: 'User',
+        role: 'Sales Manager',
+      }
     }
 
-    return {
-      id: payload.userId,
-      email: payload.email,
-      firstName: payload.firstName || '',
-      lastName: payload.lastName || '',
-      role: payload.role,
+    if (token) {
+      const payload = verifyToken(token)
+      if (!payload) {
+        return null
+      }
+
+      return {
+        id: payload.userId,
+        email: payload.email,
+        firstName: payload.firstName || '',
+        lastName: payload.lastName || '',
+        role: payload.role,
+      }
     }
+
+    return null
   } catch (error) {
     console.error('Error getting current user:', error)
     return null
