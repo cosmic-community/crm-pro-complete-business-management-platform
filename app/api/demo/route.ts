@@ -1,15 +1,42 @@
 import { NextResponse } from 'next/server'
 import { generateToken, setAuthCookie } from '@/lib/auth'
+import { cosmic } from '@/lib/cosmic'
 
 export async function POST() {
   try {
-    // Create a demo user session without requiring actual authentication
-    const demoUserPayload = {
-      userId: 'demo-user-id',
-      email: 'demo@crmprodemp.com',
-      firstName: 'Demo',
-      lastName: 'User',
-      role: 'admin'
+    // First, try to get an existing active user from Cosmic to use as demo user
+    let demoUser = null
+    
+    try {
+      const result = await cosmic.objects
+        .find({ 
+          type: 'users', 
+          'metadata.is_active': true 
+        })
+        .props(['id', 'title', 'slug', 'metadata'])
+        .depth(1)
+        .limit(1)
+
+      if (result?.objects && result.objects.length > 0) {
+        demoUser = result.objects[0]
+      }
+    } catch (cosmicError) {
+      console.log('Could not fetch demo user from Cosmic, using fallback user')
+    }
+
+    // Create demo user payload - use actual user data if available, otherwise fallback
+    const demoUserPayload = demoUser ? {
+      userId: demoUser.id,
+      email: demoUser.metadata?.email || 'demo@crmprodemp.com',
+      firstName: demoUser.metadata?.first_name || 'Demo',
+      lastName: demoUser.metadata?.last_name || 'User',
+      role: demoUser.metadata?.role?.value || demoUser.metadata?.role?.key || 'admin'
+    } : {
+      userId: '6893a71754b8038efaf57a58', // Sarah Johnson's ID from the provided data
+      email: 'sarah.johnson@company.com',
+      firstName: 'Sarah',
+      lastName: 'Johnson',
+      role: 'sales_manager'
     }
 
     // Generate a token for the demo user
@@ -18,7 +45,7 @@ export async function POST() {
     // Create response with redirect to dashboard
     const response = NextResponse.json({ 
       success: true, 
-      message: 'Demo session started',
+      message: 'Demo session started successfully',
       redirectTo: '/dashboard'
     })
 
@@ -29,7 +56,7 @@ export async function POST() {
   } catch (error) {
     console.error('Demo session creation failed:', error)
     return NextResponse.json(
-      { error: 'Failed to start demo session' },
+      { error: 'Failed to start demo session. Please try again.' },
       { status: 500 }
     )
   }

@@ -50,10 +50,11 @@ export default function HomePage() {
 
       if (response.ok) {
         const data = await response.json()
-        // Redirect to dashboard
-        window.location.href = data.redirectTo || '/dashboard'
+        // Redirect to dashboard immediately
+        window.location.href = '/dashboard'
       } else {
-        throw new Error('Failed to start demo')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to start demo')
       }
     } catch (error) {
       console.error('Demo session failed:', error)
