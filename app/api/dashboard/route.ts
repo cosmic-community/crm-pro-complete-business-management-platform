@@ -26,7 +26,7 @@ export async function GET() {
     // Calculate revenue from deals
     let revenue = 0
     if (deals.status === 'fulfilled' && deals.value?.objects) {
-      revenue = deals.value.objects.reduce((total, deal) => {
+      revenue = deals.value.objects.reduce((total: number, deal: any) => {
         const dealValue = deal.metadata?.deal_value || 0
         return total + (typeof dealValue === 'number' ? dealValue : 0)
       }, 0)
