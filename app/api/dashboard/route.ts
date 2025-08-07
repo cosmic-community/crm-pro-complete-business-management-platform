@@ -2,6 +2,27 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { cosmic } from '@/lib/cosmic'
 
+// Define interfaces for type safety
+interface CosmicObject {
+  id: string
+  title: string
+  metadata?: {
+    status?: {
+      key: string
+      value: string
+    }
+    activity_type?: {
+      key: string
+      value: string
+    }
+    deal_value?: number
+    stage?: {
+      key: string
+      value: string
+    }
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser()
@@ -27,15 +48,15 @@ export async function GET(request: NextRequest) {
 
       // Calculate stats
       const totalCustomers = contacts?.length || 0
-      const totalTasks = tasks?.filter(task => 
+      const totalTasks = tasks?.filter((task: CosmicObject) => 
         task.metadata?.status?.key !== 'completed' && task.metadata?.status?.key !== 'cancelled'
       ).length || 0
-      const totalAppointments = activities?.filter(activity => 
+      const totalAppointments = activities?.filter((activity: CosmicObject) => 
         activity.metadata?.activity_type?.key === 'meeting' || activity.metadata?.activity_type?.key === 'demo'
       ).length || 0
       
       // Calculate revenue from deals
-      const revenue = deals?.reduce((sum, deal) => {
+      const revenue = deals?.reduce((sum: number, deal: CosmicObject) => {
         const dealValue = deal.metadata?.deal_value || 0
         const stage = deal.metadata?.stage?.key
         if (stage === 'closed_won') {
