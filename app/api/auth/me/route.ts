@@ -1,38 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyToken } from '@/lib/auth'
+import { getCurrentUser } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get('auth-token')?.value
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'No authentication token found' },
-        { status: 401 }
-      )
-    }
-
-    const payload = verifyToken(token)
+    const user = await getCurrentUser()
     
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Invalid authentication token' },
-        { status: 401 }
-      )
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Return user information
-    return NextResponse.json({
-      id: payload.userId,
-      email: payload.email,
-      firstName: payload.firstName || '',
-      lastName: payload.lastName || '',
-      role: payload.role,
+    return NextResponse.json({ 
+      user,
+      authenticated: true 
     })
   } catch (error) {
-    console.error('Auth check failed:', error)
+    console.error('Auth me error:', error)
     return NextResponse.json(
-      { error: 'Authentication check failed' },
+      { error: 'Internal server error', authenticated: false },
       { status: 500 }
     )
   }
