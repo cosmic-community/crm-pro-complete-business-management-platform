@@ -1,9 +1,9 @@
 import { Suspense } from 'react'
-import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import CustomerList from '@/components/CustomerList'
 import CustomerFilters from '@/components/CustomerFilters'
 import Loading from '@/components/Loading'
+import NewCustomerModal from '@/components/NewCustomerModal'
 
 export default function CustomersPage() {
   return (
@@ -15,10 +15,7 @@ export default function CustomersPage() {
             Manage your customer database and relationships
           </p>
         </div>
-        <Link href="/dashboard/customers/new" className="btn-primary">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Customer
-        </Link>
+        <NewCustomerModal />
       </div>
 
       <Suspense fallback={<Loading />}>
