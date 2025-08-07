@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import { cosmic } from '@/lib/cosmic'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const user = await getCurrentUser()
     
@@ -10,73 +10,43 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get user details from database
-    const userDetails = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    })
+    // Get stats from Cosmic CMS
+    const [contacts, deals, tasks, activities] = await Promise.allSettled([
+      cosmic.objects.find({ type: 'contacts' }).props(['id']),
+      cosmic.objects.find({ type: 'deals' }).props(['id', 'metadata']),
+      cosmic.objects.find({ type: 'tasks' }).props(['id']),
+      cosmic.objects.find({ type: 'activities' }).props(['id'])
+    ])
 
-    if (!userDetails) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    // Calculate stats with fallback values
+    const totalCustomers = contacts.status === 'fulfilled' ? (contacts.value?.objects?.length || 0) : 0
+    const totalTasks = tasks.status === 'fulfilled' ? (tasks.value?.objects?.length || 0) : 0
+    const totalAppointments = activities.status === 'fulfilled' ? (activities.value?.objects?.length || 0) : 0
+    
+    // Calculate revenue from deals
+    let revenue = 0
+    if (deals.status === 'fulfilled' && deals.value?.objects) {
+      revenue = deals.value.objects.reduce((total, deal) => {
+        const dealValue = deal.metadata?.deal_value || 0
+        return total + (typeof dealValue === 'number' ? dealValue : 0)
+      }, 0)
     }
 
-    // Get dashboard stats based on user role
-    let stats = {
-      totalCustomers: 0,
-      totalTasks: 0,
-      totalAppointments: 0,
-      revenue: 0,
-    }
-
-    if (user.role === 'admin' || user.role === 'manager') {
-      // Admin and managers can see all data
-      const [customers, tasks, appointments] = await Promise.all([
-        prisma.customer.count(),
-        prisma.task.count(),
-        prisma.appointment.count(),
-      ])
-
-      stats = {
-        totalCustomers: customers,
-        totalTasks: tasks,
-        totalAppointments: appointments,
-        revenue: 0, // You can calculate this based on your business logic
-      }
-    } else {
-      // Staff can only see their own data
-      const [tasks, appointments] = await Promise.all([
-        prisma.task.count({
-          where: { assigneeId: user.id },
-        }),
-        prisma.appointment.count({
-          where: { employeeId: user.id },
-        }),
-      ])
-
-      stats = {
-        totalCustomers: 0,
-        totalTasks: tasks,
-        totalAppointments: appointments,
-        revenue: 0,
-      }
+    const stats = {
+      totalCustomers,
+      totalTasks,
+      totalAppointments,
+      revenue
     }
 
     return NextResponse.json({
-      user: userDetails,
-      stats,
+      user,
+      stats
     })
   } catch (error) {
     console.error('Dashboard API error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch dashboard data' },
       { status: 500 }
     )
   }

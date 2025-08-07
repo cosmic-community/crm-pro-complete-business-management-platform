@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { generateToken, setAuthCookie } from '@/lib/auth'
+import { generateToken } from '@/lib/auth'
 import { cosmic } from '@/lib/cosmic'
 
 export async function POST() {
@@ -42,15 +42,32 @@ export async function POST() {
     // Generate a token for the demo user
     const token = generateToken(demoUserPayload)
 
-    // Create response with redirect to dashboard
+    // Create response with success message
     const response = NextResponse.json({ 
       success: true, 
       message: 'Demo session started successfully',
       redirectTo: '/dashboard'
     })
 
-    // Set the auth cookie
-    response.headers.set('Set-Cookie', setAuthCookie(token))
+    const isProduction = process.env.NODE_ENV === 'production'
+    const maxAge = 60 * 60 * 24 // 24 hours in seconds
+
+    // Set both auth token and demo mode cookies
+    response.cookies.set('auth-token', token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: maxAge,
+      path: '/'
+    })
+
+    response.cookies.set('demo-mode', 'true', {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: maxAge,
+      path: '/'
+    })
 
     return response
   } catch (error) {

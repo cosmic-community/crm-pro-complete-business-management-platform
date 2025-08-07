@@ -57,29 +57,28 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       return null
     }
 
-    // If in demo mode, return a demo user
-    if (isDemoMode && !token) {
-      return {
-        id: 'demo-user',
-        email: 'demo@example.com',
-        firstName: 'Demo',
-        lastName: 'User',
-        role: 'Sales Manager',
+    // If we have a token, use it (even in demo mode)
+    if (token) {
+      const payload = verifyToken(token)
+      if (payload) {
+        return {
+          id: payload.userId,
+          email: payload.email,
+          firstName: payload.firstName || '',
+          lastName: payload.lastName || '',
+          role: payload.role,
+        }
       }
     }
 
-    if (token) {
-      const payload = verifyToken(token)
-      if (!payload) {
-        return null
-      }
-
+    // If in demo mode but no valid token, return a demo user
+    if (isDemoMode) {
       return {
-        id: payload.userId,
-        email: payload.email,
-        firstName: payload.firstName || '',
-        lastName: payload.lastName || '',
-        role: payload.role,
+        id: '6893a71754b8038efaf57a58',
+        email: 'sarah.johnson@company.com',
+        firstName: 'Sarah',
+        lastName: 'Johnson',
+        role: 'Sales Manager',
       }
     }
 

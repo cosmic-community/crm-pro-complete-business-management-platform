@@ -11,8 +11,15 @@ export default async function DashboardLayout({
 }) {
   const cookieStore = await cookies()
   const token = cookieStore.get('auth-token')?.value
+  const isDemoMode = cookieStore.get('demo-mode')?.value === 'true'
 
-  if (!token || !verifyToken(token)) {
+  // Allow access if user has valid token OR is in demo mode
+  if (!token && !isDemoMode) {
+    redirect('/login')
+  }
+
+  // If token exists but is invalid, and not in demo mode, redirect to login
+  if (token && !verifyToken(token) && !isDemoMode) {
     redirect('/login')
   }
 
