@@ -35,7 +35,7 @@ export default function DashboardPage() {
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include', // Include cookies
+          credentials: 'include',
         })
         
         if (!response.ok) {
@@ -50,7 +50,6 @@ export default function DashboardPage() {
 
         const dashboardData = await response.json()
         
-        // Validate the response structure
         if (!dashboardData.user || !dashboardData.stats) {
           throw new Error('Invalid dashboard data structure')
         }
@@ -61,7 +60,6 @@ export default function DashboardPage() {
         const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
         setError(errorMessage)
         
-        // Don't redirect on error - let user try again
         if (errorMessage.includes('Unauthorized') || errorMessage.includes('401')) {
           router.push('/login')
         }
@@ -88,7 +86,7 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center max-w-md mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-6">
             <h2 className="text-xl font-semibold text-red-800 mb-2">Error Loading Dashboard</h2>
             <p className="text-red-600 mb-4">{error}</p>
             <div className="space-y-3">
@@ -129,19 +127,33 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gray-50">
       {/* Welcome Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back, {data.user.firstName ? `${data.user.firstName} ${data.user.lastName}` : data.user.email}!
-        </h1>
-        <p className="text-gray-600 mt-1">
-          Here's what's happening with your business today.
-        </p>
-        <div className="mt-3 flex items-center space-x-4 text-sm text-gray-500">
-          <span>Role: <span className="capitalize font-medium text-gray-700">{data.user.role}</span></span>
-          <span>•</span>
-          <span>Last updated: {new Date().toLocaleTimeString()}</span>
+      <div className="bg-white rounded-2xl shadow-sm p-8 mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Welcome back, {data.user.firstName ? `${data.user.firstName}` : 'User'}!
+            </h1>
+            <p className="text-gray-600">
+              Easily manage your upcoming sessions and track client progress
+            </p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gray-800 rounded-full flex items-center justify-center text-white text-xl font-semibold">
+              {data.user.firstName ? data.user.firstName[0] : 'U'}
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">
+                {data.user.firstName ? `${data.user.firstName} ${data.user.lastName}` : data.user.email}
+              </p>
+              <p className="text-sm text-gray-500 capitalize">{data.user.role}</p>
+              <div className="flex items-center mt-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <span className="text-sm text-gray-600">Available</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -149,12 +161,12 @@ export default function DashboardPage() {
       <DashboardStats stats={data.stats} />
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="space-y-6">
-          <TaskOverview />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        <div className="lg:col-span-2 space-y-6">
+          <RecentAppointments />
         </div>
         <div className="space-y-6">
-          <RecentAppointments />
+          <TaskOverview />
         </div>
       </div>
     </div>

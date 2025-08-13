@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CheckSquare, Clock, AlertTriangle } from 'lucide-react'
+import { Calendar, Users } from 'lucide-react'
 import Loading from './Loading'
 
 interface Task {
@@ -52,8 +52,8 @@ export default function TaskOverview() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Task Overview</h2>
+      <div className="bg-white rounded-2xl shadow-sm p-8">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">My agenda</h2>
         <div className="flex justify-center">
           <Loading />
         </div>
@@ -63,111 +63,121 @@ export default function TaskOverview() {
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Task Overview</h2>
+      <div className="bg-white rounded-2xl shadow-sm p-8">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">My agenda</h2>
         <div className="text-center text-gray-500">
-          <p>Unable to load tasks</p>
-          <p className="text-sm mt-1">{error}</p>
+          <p>Unable to load agenda</p>
         </div>
       </div>
     )
   }
 
-  // Filter tasks by status
-  const activeTasks = tasks.filter(task => 
-    task.metadata?.status?.key === 'open' || task.metadata?.status?.key === 'in_progress'
-  )
+  // Mock calendar data
+  const currentDate = new Date()
+  const weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+  const currentDay = currentDate.getDate()
 
-  const highPriorityTasks = activeTasks.filter(task => 
-    task.metadata?.priority?.key === 'high'
-  )
-
-  const overdueTasks = activeTasks.filter(task => {
-    if (!task.metadata?.due_date) return false
-    const dueDate = new Date(task.metadata.due_date)
-    return dueDate < new Date()
+  const calendarDays = Array.from({length: 7}, (_, i) => {
+    const day = currentDay - 3 + i
+    const isToday = day === currentDay
+    return { day: day > 0 ? day : '', isToday }
   })
 
-  const taskStats = [
+  // Mock appointments
+  const appointments = [
     {
-      title: 'Active Tasks',
-      value: activeTasks.length,
-      icon: CheckSquare,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
+      id: '1',
+      title: 'Calm & Focus Group',
+      time: '12:30-13:30',
+      avatars: ['https://images.unsplash.com/photo-1494790108755-2616b62413d0?w=40&h=40&fit=crop&crop=face'],
+      color: 'bg-blue-50 text-blue-700'
     },
     {
-      title: 'High Priority',
-      value: highPriorityTasks.length,
-      icon: AlertTriangle,
-      color: 'text-red-600',
-      bgColor: 'bg-red-100'
+      id: '2',
+      title: '1:1 with T. Morgan',
+      time: '14:30-15:15',
+      avatars: ['https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face'],
+      color: 'bg-gray-50 text-gray-700'
     },
     {
-      title: 'Overdue',
-      value: overdueTasks.length,
-      icon: Clock,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100'
+      id: '3',
+      title: '1:1 with S. Green',
+      time: '16:30-17:00',
+      avatars: ['https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face'],
+      color: 'bg-gray-50 text-gray-700'
+    },
+    {
+      id: '4',
+      title: '1:1 with M. Carter',
+      time: '18:00-19:00',
+      avatars: ['https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face'],
+      color: 'bg-gray-50 text-gray-700'
     }
   ]
 
-  const recentTasks = activeTasks.slice(0, 5)
-
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Task Overview</h2>
-      
-      {/* Task Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        {taskStats.map((stat, index) => (
-          <div key={index} className="text-center">
-            <div className={`${stat.bgColor} ${stat.color} p-3 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2`}>
-              <stat.icon className="h-6 w-6" />
+    <div className="bg-white rounded-2xl shadow-sm p-8">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold text-gray-900">My agenda</h2>
+        <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">View all</button>
+      </div>
+
+      {/* Mini Calendar */}
+      <div className="mb-8">
+        <div className="grid grid-cols-7 gap-1 mb-4">
+          {weekdays.map((day) => (
+            <div key={day} className="text-center text-xs font-medium text-gray-500 py-2">
+              {day}
             </div>
-            <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-            <p className="text-sm text-gray-600">{stat.title}</p>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-1">
+          {calendarDays.map((date, index) => (
+            <div 
+              key={index} 
+              className={`text-center py-2 text-sm rounded-lg ${
+                date.isToday 
+                  ? 'bg-gray-900 text-white font-semibold' 
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              {date.day}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Appointments */}
+      <div className="space-y-3">
+        {appointments.map((appointment) => (
+          <div key={appointment.id} className={`${appointment.color} p-4 rounded-xl`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Users className="h-4 w-4" />
+                <div>
+                  <div className="text-sm font-medium">{appointment.title}</div>
+                  <div className="text-xs opacity-75">{appointment.time}</div>
+                </div>
+              </div>
+              <div className="flex -space-x-1">
+                {appointment.avatars.map((avatar, index) => (
+                  <img 
+                    key={index}
+                    src={`${avatar}&w=32&h=32&fit=crop&crop=face`}
+                    alt=""
+                    className="w-8 h-8 rounded-full border-2 border-white"
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Recent Tasks */}
-      <div>
-        <h3 className="text-sm font-medium text-gray-900 mb-3">Recent Tasks</h3>
-        {recentTasks.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">No active tasks</p>
-        ) : (
-          <div className="space-y-3">
-            {recentTasks.map((task) => (
-              <div key={task.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{task.title}</p>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      task.metadata?.priority?.key === 'high'
-                        ? 'bg-red-100 text-red-800'
-                        : task.metadata?.priority?.key === 'medium'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-green-100 text-green-800'
-                    }`}>
-                      {task.metadata?.priority?.value || 'Low'}
-                    </span>
-                    {task.metadata?.assigned_to?.title && (
-                      <span className="text-xs text-gray-500">
-                        Assigned to {task.metadata.assigned_to.title}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {task.metadata?.due_date && (
-                  <div className="text-xs text-gray-500">
-                    Due: {new Date(task.metadata.due_date).toLocaleDateString()}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+      <div className="mt-6 pt-4 border-t border-gray-100">
+        <button className="w-full text-center text-sm text-gray-600 hover:text-gray-800 py-2">
+          All upcoming events
+        </button>
       </div>
     </div>
   )
